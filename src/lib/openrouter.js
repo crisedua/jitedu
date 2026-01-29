@@ -1,24 +1,20 @@
-// OpenRouter API integration for AI analysis
-const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
-const AI_MODEL = process.env.REACT_APP_AI_MODEL || 'anthropic/claude-3.5-sonnet';
+// OpenAI API Integration (formerly OpenRouter)
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+const AI_MODEL = process.env.REACT_APP_AI_MODEL || 'gpt-4o';
 
-// Debug logging (EXHAUSTIVE)
-const envKeys = Object.keys(process.env).filter(key => key.includes('APP') || key.includes('VITE') || key.includes('KEY'));
-console.log('🔍 Environment Debug Info:', {
-  hasKey: !!OPENROUTER_API_KEY,
+// Debug logging
+console.log('OpenAI Config Loaded:', {
+  hasKey: !!OPENAI_API_KEY,
   model: AI_MODEL,
-  envType: process.env.NODE_ENV,
-  availableEnvKeys: envKeys, // Show us what keys are actually visible
-  reactAppKeyExists: !!process.env.REACT_APP_OPENROUTER_API_KEY,
-  viteKeyExists: !!process.env.VITE_OPENROUTER_API_KEY
+  envType: process.env.NODE_ENV
 });
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const analyzeTranscriptWithAI = async (transcript, videoMetadata) => {
-  if (!OPENROUTER_API_KEY) {
-    console.error('OpenRouter API key not configured');
-    throw new Error('La clave API de OpenRouter es necesaria para el análisis de IA');
+  if (!OPENAI_API_KEY) {
+    console.error('OpenAI API key not configured');
+    throw new Error('La clave API de OpenAI es necesaria para el análisis de IA');
   }
 
   const fullText = Array.isArray(transcript)
@@ -189,13 +185,11 @@ ${fullText}
   try {
     console.log(`🤖 Iniciando análisis con ${AI_MODEL}...`);
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'Marketing Analyzer IA'
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: AI_MODEL,
@@ -210,21 +204,19 @@ ${fullText}
           }
         ],
         temperature: 0.7,
-        max_tokens: 16000,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0
+        max_tokens: 4000,
+        response_format: { type: "json_object" } // Force JSON for OpenAI
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('OpenRouter API Error:', errorData);
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
-    console.log('✅ Respuesta recibida de OpenRouter');
+    console.log('✅ Respuesta recibida de OpenAI');
 
     const content = data.choices[0]?.message?.content;
 
@@ -277,7 +269,7 @@ ${fullText}
 
     // Provide helpful error messages
     if (error.message.includes('API key')) {
-      throw new Error('La clave API de OpenRouter es inválida o no está configurada');
+      throw new Error('La clave API de OpenAI es inválida o no está configurada');
     }
 
     if (error.message.includes('JSON')) {
@@ -285,46 +277,34 @@ ${fullText}
     }
 
     if (error.message.includes('429')) {
-      throw new Error('Límite de peticiones alcanzado. Por favor, espera un momento e intenta de nuevo.');
+      throw new Error('Límite de peticiones alcanzado (Quota exceeded). Por favor, intenta de nuevo más tarde.');
     }
 
     throw error;
   }
 };
 
-// Get available models
+// Get available models (Updated for OpenAI)
 export const getAvailableModels = () => {
   return [
     {
-      id: 'anthropic/claude-3.5-sonnet',
-      name: 'Claude 3.5 Sonnet',
-      description: 'Mejor para análisis detallado y reconocimiento de patrones',
-      recommended: true,
-      costPer1M: '$3.00'
-    },
-    {
-      id: 'anthropic/claude-3-opus',
-      name: 'Claude 3 Opus',
-      description: 'Más capaz, ideal para análisis complejos',
-      costPer1M: '$15.00'
-    },
-    {
-      id: 'openai/gpt-4-turbo',
-      name: 'GPT-4 Turbo',
-      description: 'Excelente para salida estructurada y consistencia',
-      costPer1M: '$10.00'
-    },
-    {
-      id: 'openai/gpt-4o',
+      id: 'gpt-4o',
       name: 'GPT-4o',
-      description: 'Rápido y económico, buena calidad',
+      description: 'Más rápido y mejor calidad general',
+      recommended: true,
       costPer1M: '$5.00'
     },
     {
-      id: 'google/gemini-pro-1.5',
-      name: 'Gemini Pro 1.5',
-      description: 'Excelente para transcripts muy largos',
-      costPer1M: '$3.50'
+      id: 'gpt-4-turbo',
+      name: 'GPT-4 Turbo',
+      description: 'Modelo potente y fiable',
+      costPer1M: '$10.00'
+    },
+    {
+      id: 'gpt-3.5-turbo',
+      name: 'GPT-3.5 Turbo',
+      description: 'Opción económica y rápida',
+      costPer1M: '$0.50'
     }
   ];
 };
@@ -332,17 +312,17 @@ export const getAvailableModels = () => {
 // Test API connection
 export const testOpenRouterConnection = async () => {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
+    const response = await fetch('https://api.openai.com/v1/models', {
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       }
     });
 
     if (!response.ok) {
-      throw new Error('No se pudo conectar con OpenRouter');
+      throw new Error('No se pudo conectar con OpenAI');
     }
 
-    return { success: true, message: 'Conexión exitosa con OpenRouter' };
+    return { success: true, message: 'Conexión exitosa con OpenAI' };
   } catch (error) {
     return { success: false, message: error.message };
   }
@@ -350,8 +330,8 @@ export const testOpenRouterConnection = async () => {
 
 // Chat with transcript - Q&A functionality
 export const chatWithTranscript = async (transcriptText, aiAnalysis, chatHistory, question) => {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('La clave API de OpenRouter es necesaria para el chat');
+  if (!OPENAI_API_KEY) {
+    throw new Error('La clave API de OpenAI es necesaria para el chat');
   }
 
   const systemPrompt = `Eres un asistente experto en análisis de marketing y contenido de video. 
@@ -383,13 +363,11 @@ INSTRUCCIONES:
   ];
 
   try {
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'Marketing Analyzer IA Chat'
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: AI_MODEL,
@@ -401,7 +379,7 @@ INSTRUCCIONES:
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Error de API OpenRouter: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
+      throw new Error(`Error de API OpenAI: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
     }
 
     const data = await response.json();
@@ -417,7 +395,7 @@ INSTRUCCIONES:
     console.error('❌ Chat Error:', error);
 
     if (error.message.includes('429')) {
-      throw new Error('Límite de rate alcanzado. Por favor, espera un momento.');
+      throw new Error('Límite de peticiones alcanzado. Por favor, espera un momento.');
     }
 
     throw error;
@@ -426,8 +404,8 @@ INSTRUCCIONES:
 
 // Chat with ALL transcripts - global knowledge base search
 export const chatWithAllTranscripts = async (transcripts, chatHistory, question) => {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('La clave API de OpenRouter es necesaria para el chat');
+  if (!OPENAI_API_KEY) {
+    throw new Error('La clave API de OpenAI es necesaria para el chat');
   }
 
   // Build a knowledge base from all transcripts
@@ -482,13 +460,11 @@ IMPORTANTE:
   try {
     console.log(`🔍 Buscando en ${transcripts.length} transcripts...`);
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'Marketing Knowledge Base Chat'
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: AI_MODEL,
@@ -500,7 +476,7 @@ IMPORTANTE:
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Error de API OpenRouter: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
+      throw new Error(`Error de API OpenAI: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
     }
 
     const data = await response.json();
@@ -517,7 +493,7 @@ IMPORTANTE:
     console.error('❌ Global Chat Error:', error);
 
     if (error.message.includes('429')) {
-      throw new Error('Límite de rate alcanzado. Por favor, espera un momento.');
+      throw new Error('Límite de peticiones alcanzado. Por favor, espera un momento.');
     }
 
     throw error;
