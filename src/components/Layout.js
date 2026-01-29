@@ -65,13 +65,15 @@ const Layout = ({ children }) => {
             <User size={16} />
           </div>
           <div className="user-details">
-            <span className="user-email">{user?.email}</span>
-            <span className="user-role">{isAdmin ? 'Admin' : 'Usuario'}</span>
+            <span className="user-email">{user?.email || 'Invitado'}</span>
+            <span className="user-role">{user ? (isAdmin ? 'Admin' : 'Usuario') : 'Modo Demo'}</span>
           </div>
         </div>
-        <button onClick={logout} className="logout-btn" title="Cerrar Sessión">
-          <LogOut size={16} />
-        </button>
+        {user && (
+          <button onClick={logout} className="logout-btn" title="Cerrar Sessión">
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
