@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Send, Loader2, MessageSquare, Plus, FileText } from 'lucide-react';
+import { Send, Loader2, MessageSquare, Plus, FileText, Lightbulb } from 'lucide-react';
 import { chatWithAllTranscripts } from '../lib/openrouter';
 import { getRecentTranscripts } from '../lib/supabase-simple';
 
@@ -34,46 +34,86 @@ const GlobalChat = () => {
         if (transcripts.length === 0) return [];
 
         const suggestions = [];
+        const usedTitles = new Set();
 
-        // Add suggestions based on transcript titles
-        transcripts.slice(0, 3).forEach(t => {
-            if (t.title) {
+        // 1. Extract techniques/findings from AI analysis
+        transcripts.forEach(t => {
+            if (t.ai_analysis) {
+                // Check for techniques array
+                const techniques = t.ai_analysis.techniques || [];
+                // Check for summary.keyFindings
+                const findings = t.ai_analysis.summary?.keyFindings || [];
+
+                // Suggest explaining a technique
+                if (techniques.length > 0 && !usedTitles.has(t.id + '_tech')) {
+                    const tech = techniques[0]; // Take the first one found
+                    suggestions.push({
+                        icon: FileText,
+                        text: `Explícame la técnica de "${tech.name}" en "${t.title}"`,
+                        color: '#3B82F6'
+                    });
+                    usedTitles.add(t.id + '_tech');
+                }
+
+                // Suggest elaborating on a key finding
+                else if (findings.length > 0 && !usedTitles.has(t.id + '_find')) {
+                    // Truncate finding if too long
+                    let findingText = findings[0];
+                    if (findingText.length > 40) findingText = findingText.substring(0, 40) + '...';
+
+                    suggestions.push({
+                        icon: Lightbulb,
+                        text: `Dime más sobre: "${findingText}" en "${t.title}"`,
+                        color: '#F59E0B'
+                    });
+                    usedTitles.add(t.id + '_find');
+                }
+            }
+
+            // Fallback to simple title question if no analysis or we haven't used this transcript yet
+            if (t.title && !usedTitles.has(t.id + '_simple') && !usedTitles.has(t.id + '_tech') && !usedTitles.has(t.id + '_find')) {
                 suggestions.push({
                     icon: FileText,
                     text: `¿Qué puedo aprender de "${t.title}"?`,
                     color: '#3B82F6'
                 });
+                usedTitles.add(t.id + '_simple');
             }
         });
 
-        // Add a general comparison question if there are multiple transcripts
+        // 2. Add comparison if we have multiple transcripts
         if (transcripts.length > 1) {
             suggestions.push({
                 icon: MessageSquare,
-                text: `Compara las técnicas en los ${transcripts.length} transcripts`,
+                text: `Compara las estrategias de persuasión entre los videos`,
                 color: '#10B981'
             });
         }
 
-        // Add general marketing questions
+        // 3. Add general marketing questions to fill gaps
         const generalQuestions = [
-            { text: '¿Cuáles son los hooks más efectivos?', color: '#F59E0B' },
-            { text: '¿Qué técnicas de persuasión se usan?', color: '#EC4899' },
-            { text: '¿Cómo manejan las objeciones?', color: '#8B5CF6' },
-            { text: '¿Qué CTAs funcionan mejor?', color: '#EF4444' },
+            { text: '¿Cuáles son los hooks más efectivos detectados?', color: '#8B5CF6' },
+            { text: '¿Qué patrones de cierre de ventas se repiten?', color: '#EF4444' },
+            { text: 'Analizar la estructura de los scripts', color: '#EC4899' },
+            { text: '¿Qué técnicas de psicología se usan?', color: '#F59E0B' }
         ];
 
-        // Fill remaining slots with general questions
-        const remaining = 4 - suggestions.length;
-        generalQuestions.slice(0, remaining).forEach(q => {
-            suggestions.push({
-                icon: MessageSquare,
-                text: q.text,
-                color: q.color
-            });
-        });
+        // Shuffle and fill
+        const finalSuggestions = suggestions.slice(0, 4);
+        while (finalSuggestions.length < 4) {
+            const nextGen = generalQuestions.shift();
+            if (nextGen) {
+                finalSuggestions.push({
+                    icon: MessageSquare,
+                    text: nextGen.text,
+                    color: nextGen.color
+                });
+            } else {
+                break;
+            }
+        }
 
-        return suggestions.slice(0, 4);
+        return finalSuggestions.slice(0, 4);
     }, [transcripts]);
 
     // Auto-resize textarea
