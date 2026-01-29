@@ -61,7 +61,7 @@ const GlobalChat = () => {
             }
         } catch (err) {
             console.error('Error analyzing pending:', err);
-            alert('Error durante el análisis masivo. Revisa la consola.');
+            alert(`Error: ${err.message}. \n\nRevisa que la API Key esté configurada en Vercel.`);
         } finally {
             setIsAnalyzingPending(false);
         }
