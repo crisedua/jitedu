@@ -166,6 +166,25 @@ export const getRecentTranscripts = async (limit = 20) => {
   return dbTranscripts;
 };
 
+// Get transcripts that have no AI analysis
+export const getUnanalyzedTranscripts = async (limit = 20) => {
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('transcripts')
+        .select('*')
+        .is('ai_analysis', null)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      return data || [];
+    } catch (e) {
+      console.warn('Error fetching unanalyzed:', e);
+      return [];
+    }
+  }
+  return [];
+};
+
 export const deleteTranscript = async (transcriptId) => {
   try {
     if (supabase) {

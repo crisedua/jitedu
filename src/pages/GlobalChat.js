@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Loader2, MessageSquare, Plus, FileText, Lightbulb } from 'lucide-react';
-import { chatWithAllTranscripts } from '../lib/openrouter';
-import { getRecentTranscripts } from '../lib/supabase-simple';
+import { chatWithAllTranscripts, analyzeTranscriptWithAI } from '../lib/openrouter';
+import { getRecentTranscripts, updateTranscriptAnalysis } from '../lib/supabase-simple';
 
 const GlobalChat = () => {
     const messagesEndRef = useRef(null);
@@ -28,6 +28,44 @@ const GlobalChat = () => {
         };
         loadTranscripts();
     }, []);
+
+    // Check for un-analyzed transcripts
+    const pendingTranscripts = useMemo(() => {
+        return transcripts.filter(t => !t.ai_analysis);
+    }, [transcripts]);
+
+    const [isAnalyzingPending, setIsAnalyzingPending] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
+
+    const handleAnalyzePending = async () => {
+        if (pendingTranscripts.length === 0) return;
+
+        setIsAnalyzingPending(true);
+        setAnalysisProgress({ current: 0, total: pendingTranscripts.length });
+
+        try {
+            for (let i = 0; i < pendingTranscripts.length; i++) {
+                const t = pendingTranscripts[i];
+                setAnalysisProgress({ current: i + 1, total: pendingTranscripts.length });
+
+                // Analyze
+                const analysis = await analyzeTranscriptWithAI(t.transcript_text, { title: t.title });
+
+                // Save
+                await updateTranscriptAnalysis(t.id, analysis);
+
+                // Update local state to reflect change immediately
+                setTranscripts(prev => prev.map(pt =>
+                    pt.id === t.id ? { ...pt, ai_analysis: analysis } : pt
+                ));
+            }
+        } catch (err) {
+            console.error('Error analyzing pending:', err);
+            alert('Error durante el análisis masivo. Revisa la consola.');
+        } finally {
+            setIsAnalyzingPending(false);
+        }
+    };
 
     // Generate dynamic suggestions based on transcripts
     const quickSuggestions = useMemo(() => {
@@ -267,6 +305,45 @@ const GlobalChat = () => {
                             <Send size={20} />
                         </button>
                     </div>
+
+                    {/* Pending Analysis Banner */}
+                    {pendingTranscripts.length > 0 && (
+                        <div className="pending-analysis-banner" style={{
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            margin: '24px 0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            color: '#D97706'
+                        }}>
+                            <div className="banner-text">
+                                <strong>⚠️ Inteligencia Incompleta</strong>
+                                <p style={{ fontSize: '0.9rem', margin: '4px 0 0 0', opacity: 0.9 }}>
+                                    Hay {pendingTranscripts.length} transcripts sin analizar.
+                                    {isAnalyzingPending ? ` Procesando ${analysisProgress.current}/${analysisProgress.total}...` : ' Procesa ahora para mejorar el chat.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleAnalyzePending}
+                                disabled={isAnalyzingPending}
+                                style={{
+                                    background: '#D97706',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    cursor: isAnalyzingPending ? 'wait' : 'pointer',
+                                    opacity: isAnalyzingPending ? 0.7 : 1,
+                                    fontWeight: 500
+                                }}
+                            >
+                                {isAnalyzingPending ? (<Loader2 size={16} className="spinning" />) : '⚡ Analizar Todo'}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Quick Actions - Based on transcripts */}
                     <div className="quick-actions">
