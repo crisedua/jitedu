@@ -94,7 +94,7 @@ const GlobalChat = () => {
         const generalQuestions = [
             { text: '¿Cuáles son los hooks más efectivos detectados?', color: '#8B5CF6' },
             { text: '¿Qué patrones de cierre de ventas se repiten?', color: '#EF4444' },
-            { text: 'Analizar la estructura de los scripts', color: '#EC4899' },
+            { text: 'Analizar la estructura de los guiones', color: '#EC4899' },
             { text: '¿Qué técnicas de psicología se usan?', color: '#F59E0B' }
         ];
 

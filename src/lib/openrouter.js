@@ -1,13 +1,20 @@
 // OpenRouter API integration for AI analysis
-const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
 const AI_MODEL = process.env.REACT_APP_AI_MODEL || 'anthropic/claude-3.5-sonnet';
+
+// Debug logging (will show in browser console)
+console.log('OpenRouter Config Loaded:', {
+  hasKey: !!OPENROUTER_API_KEY,
+  model: AI_MODEL,
+  envType: process.env.NODE_ENV
+});
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 export const analyzeTranscriptWithAI = async (transcript, videoMetadata) => {
   if (!OPENROUTER_API_KEY) {
     console.error('OpenRouter API key not configured');
-    throw new Error('OpenRouter API key is required for AI analysis');
+    throw new Error('La clave API de OpenRouter es necesaria para el análisis de IA');
   }
 
   const fullText = Array.isArray(transcript)
@@ -218,7 +225,7 @@ ${fullText}
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
-      throw new Error('No content received from AI');
+      throw new Error('No se recibió contenido de la IA');
     }
 
     // Parse the JSON response
@@ -266,7 +273,7 @@ ${fullText}
 
     // Provide helpful error messages
     if (error.message.includes('API key')) {
-      throw new Error('API key de OpenRouter inválida o no configurada');
+      throw new Error('La clave API de OpenRouter es inválida o no está configurada');
     }
 
     if (error.message.includes('JSON')) {
@@ -274,7 +281,7 @@ ${fullText}
     }
 
     if (error.message.includes('429')) {
-      throw new Error('Límite de rate alcanzado. Por favor, espera un momento e intenta de nuevo.');
+      throw new Error('Límite de peticiones alcanzado. Por favor, espera un momento e intenta de nuevo.');
     }
 
     throw error;
@@ -328,7 +335,7 @@ export const testOpenRouterConnection = async () => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to connect to OpenRouter');
+      throw new Error('No se pudo conectar con OpenRouter');
     }
 
     return { success: true, message: 'Conexión exitosa con OpenRouter' };
@@ -340,7 +347,7 @@ export const testOpenRouterConnection = async () => {
 // Chat with transcript - Q&A functionality
 export const chatWithTranscript = async (transcriptText, aiAnalysis, chatHistory, question) => {
   if (!OPENROUTER_API_KEY) {
-    throw new Error('OpenRouter API key is required for chat');
+    throw new Error('La clave API de OpenRouter es necesaria para el chat');
   }
 
   const systemPrompt = `Eres un asistente experto en análisis de marketing y contenido de video. 
@@ -390,14 +397,14 @@ INSTRUCCIONES:
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      throw new Error(`Error de API OpenRouter: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
     }
 
     const data = await response.json();
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
-      throw new Error('No response received from AI');
+      throw new Error('No se recibió respuesta de la IA');
     }
 
     return content;
@@ -416,7 +423,7 @@ INSTRUCCIONES:
 // Chat with ALL transcripts - global knowledge base search
 export const chatWithAllTranscripts = async (transcripts, chatHistory, question) => {
   if (!OPENROUTER_API_KEY) {
-    throw new Error('OpenRouter API key is required for chat');
+    throw new Error('La clave API de OpenRouter es necesaria para el chat');
   }
 
   // Build a knowledge base from all transcripts
@@ -489,14 +496,14 @@ IMPORTANTE:
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      throw new Error(`Error de API OpenRouter: ${response.status} - ${errorData.error?.message || 'Error desconocido'}`);
     }
 
     const data = await response.json();
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
-      throw new Error('No response received from AI');
+      throw new Error('No se recibió respuesta de la IA');
     }
 
     console.log('✅ Respuesta generada');
