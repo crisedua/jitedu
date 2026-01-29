@@ -2,11 +2,15 @@
 const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
 const AI_MODEL = process.env.REACT_APP_AI_MODEL || 'anthropic/claude-3.5-sonnet';
 
-// Debug logging (will show in browser console)
-console.log('OpenRouter Config Loaded:', {
+// Debug logging (EXHAUSTIVE)
+const envKeys = Object.keys(process.env).filter(key => key.includes('APP') || key.includes('VITE') || key.includes('KEY'));
+console.log('🔍 Environment Debug Info:', {
   hasKey: !!OPENROUTER_API_KEY,
   model: AI_MODEL,
-  envType: process.env.NODE_ENV
+  envType: process.env.NODE_ENV,
+  availableEnvKeys: envKeys, // Show us what keys are actually visible
+  reactAppKeyExists: !!process.env.REACT_APP_OPENROUTER_API_KEY,
+  viteKeyExists: !!process.env.VITE_OPENROUTER_API_KEY
 });
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
