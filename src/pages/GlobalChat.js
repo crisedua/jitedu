@@ -219,15 +219,13 @@ const GlobalChat = () => {
                             placeholder="Quiero comenzar con..."
                             rows={3}
                         />
-                        {inputValue.trim() && (
-                            <button
-                                className="welcome-send-btn"
-                                onClick={handleSendMessage}
-                                disabled={isSending}
-                            >
-                                <Send size={20} />
-                            </button>
-                        )}
+                        <button
+                            className="welcome-send-btn"
+                            onClick={handleSendMessage}
+                            disabled={isSending || !inputValue.trim()}
+                        >
+                            <Send size={20} />
+                        </button>
                     </div>
 
                     {/* Quick Actions - Based on transcripts */}

@@ -147,7 +147,7 @@ export const getRecentTranscripts = async (limit = 20) => {
     try {
       const { data } = await supabase
         .from('transcripts')
-        .select('id, title, status, created_at')
+        .select('id, title, status, created_at, transcript_text, ai_analysis')
         .order('created_at', { ascending: false })
         .limit(limit);
       if (data) dbTranscripts = data;

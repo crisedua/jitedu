@@ -422,10 +422,14 @@ export const chatWithAllTranscripts = async (transcripts, chatHistory, question)
   // Build a knowledge base from all transcripts
   const knowledgeBase = transcripts.map((t, index) => {
     const text = t.transcript_text || '';
+    const analysis = t.ai_analysis ? `\nANÁLISIS PREVIO: ${JSON.stringify(t.ai_analysis.summary || t.ai_analysis, null, 2)}` : '';
+
     // Truncate very long transcripts to manage context window
     const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...[truncado]' : text;
-    return `--- TRANSCRIPT ${index + 1} ---
+
+    return `--- TRANSCRIPT ${index + 1}: "${t.title || 'Sin título'}" ---
 ${truncatedText}
+${analysis}
 --- FIN TRANSCRIPT ${index + 1} ---`;
   }).join('\n\n');
 
