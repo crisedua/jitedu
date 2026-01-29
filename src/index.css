@@ -1963,8 +1963,316 @@ body {
 }
 
 /* ============================================
-   ChatGPT-Style Interface
+   ChatGPT-Style Interface - New Layout
    ============================================ */
+
+/* Welcome View - Input at top */
+.chat-welcome-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  padding: var(--space-6);
+  background: linear-gradient(180deg, var(--gray-50) 0%, #ffffff 100%);
+}
+
+.welcome-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--gray-500);
+}
+
+.welcome-empty {
+  text-align: center;
+}
+
+.welcome-empty h2 {
+  font-size: 1.5rem;
+  color: var(--gray-800);
+  margin-bottom: var(--space-2);
+}
+
+.welcome-empty p {
+  color: var(--gray-500);
+  margin-bottom: var(--space-6);
+}
+
+.add-transcript-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--primary-600);
+  color: white;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.add-transcript-btn:hover {
+  background: var(--primary-700);
+  transform: translateY(-1px);
+}
+
+.welcome-content {
+  width: 100%;
+  max-width: 700px;
+}
+
+/* Large Input Container */
+.welcome-input-container {
+  position: relative;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--space-6);
+}
+
+.welcome-input-container textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  resize: none;
+  font-family: inherit;
+  color: var(--gray-800);
+  min-height: 80px;
+}
+
+.welcome-input-container textarea::placeholder {
+  color: var(--gray-400);
+}
+
+.welcome-send-btn {
+  position: absolute;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.welcome-send-btn:hover {
+  background: var(--primary-700);
+  transform: scale(1.05);
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.quick-action-btn:hover {
+  border-color: var(--primary-300);
+  background: var(--gray-50);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.transcript-count {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--gray-400);
+}
+
+/* Conversation View */
+.chat-conversation-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  background: var(--gray-50);
+}
+
+.conversation-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.conversation-message {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.conversation-message.user {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-100);
+}
+
+.conversation-message.assistant {
+  background: white;
+  border: 1px solid var(--gray-200);
+}
+
+.message-avatar {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.conversation-message.user .message-avatar {
+  background: var(--primary-100);
+}
+
+.conversation-message.assistant .message-avatar {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  color: white;
+  font-size: 1.2rem;
+}
+
+.message-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-sender {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.message-body .message-text {
+  color: var(--gray-800);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--gray-500);
+}
+
+/* Fixed Input at bottom during conversation */
+.conversation-input-wrapper {
+  background: white;
+  border-top: 1px solid var(--gray-200);
+  padding: var(--space-4);
+}
+
+.conversation-input-form {
+  display: flex;
+  gap: var(--space-3);
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2) var(--space-3);
+}
+
+.conversation-input-form textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  padding: var(--space-2);
+  min-height: 24px;
+  max-height: 150px;
+}
+
+.conversation-input-form button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.conversation-input-form button:hover:not(:disabled) {
+  background: var(--primary-700);
+}
+
+.conversation-input-form button:disabled {
+  background: var(--gray-300);
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-content {
+    padding: 0 var(--space-2);
+  }
+
+  .conversation-messages {
+    padding: var(--space-3);
+  }
+
+  .conversation-message {
+    padding: var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+}
 
 .chatgpt-container {
   display: flex;

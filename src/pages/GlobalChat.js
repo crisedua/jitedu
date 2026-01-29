@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Send, Loader2, MessageSquare, Plus, Sparkles } from 'lucide-react';
+import { Send, Loader2, MessageSquare, Plus, FileText } from 'lucide-react';
 import { chatWithAllTranscripts } from '../lib/openrouter';
 import { getRecentTranscripts } from '../lib/supabase-simple';
 
 const GlobalChat = () => {
     const messagesEndRef = useRef(null);
-    const inputRef = useRef(null);
+    const textareaRef = useRef(null);
 
     const [transcripts, setTranscripts] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -29,13 +29,68 @@ const GlobalChat = () => {
         loadTranscripts();
     }, []);
 
+    // Generate dynamic suggestions based on transcripts
+    const quickSuggestions = useMemo(() => {
+        if (transcripts.length === 0) return [];
+
+        const suggestions = [];
+
+        // Add suggestions based on transcript titles
+        transcripts.slice(0, 3).forEach(t => {
+            if (t.title) {
+                suggestions.push({
+                    icon: FileText,
+                    text: `¿Qué puedo aprender de "${t.title}"?`,
+                    color: '#3B82F6'
+                });
+            }
+        });
+
+        // Add a general comparison question if there are multiple transcripts
+        if (transcripts.length > 1) {
+            suggestions.push({
+                icon: MessageSquare,
+                text: `Compara las técnicas en los ${transcripts.length} transcripts`,
+                color: '#10B981'
+            });
+        }
+
+        // Add general marketing questions
+        const generalQuestions = [
+            { text: '¿Cuáles son los hooks más efectivos?', color: '#F59E0B' },
+            { text: '¿Qué técnicas de persuasión se usan?', color: '#EC4899' },
+            { text: '¿Cómo manejan las objeciones?', color: '#8B5CF6' },
+            { text: '¿Qué CTAs funcionan mejor?', color: '#EF4444' },
+        ];
+
+        // Fill remaining slots with general questions
+        const remaining = 4 - suggestions.length;
+        generalQuestions.slice(0, remaining).forEach(q => {
+            suggestions.push({
+                icon: MessageSquare,
+                text: q.text,
+                color: q.color
+            });
+        });
+
+        return suggestions.slice(0, 4);
+    }, [transcripts]);
+
+    // Auto-resize textarea
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+        }
+    }, [inputValue]);
+
     // Scroll to bottom on new messages
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
     const handleSendMessage = async (e) => {
-        e.preventDefault();
+        e?.preventDefault();
 
         if (!inputValue.trim() || isSending) return;
 
@@ -60,119 +115,143 @@ const GlobalChat = () => {
             }]);
         } finally {
             setIsSending(false);
-            inputRef.current?.focus();
+            textareaRef.current?.focus();
         }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    const handleQuickAction = (text) => {
+        setInputValue(text);
+        textareaRef.current?.focus();
     };
 
     const transcriptCount = transcripts.length;
     const hasTranscripts = transcriptCount > 0;
 
-    // ChatGPT-style interface
-    return (
-        <div className="chatgpt-container">
-            {/* Main Chat Area */}
-            <div className="chatgpt-main">
-                {/* Messages Area */}
-                <div className="chatgpt-messages">
-                    {isLoading ? (
-                        <div className="chatgpt-welcome">
-                            <Loader2 size={40} className="spinning" />
-                            <p>Cargando base de conocimiento...</p>
-                        </div>
-                    ) : messages.length === 0 ? (
-                        <div className="chatgpt-welcome">
-                            <div className="welcome-icon">
-                                <Sparkles size={48} />
+    // Show conversation view when there are messages
+    if (messages.length > 0) {
+        return (
+            <div className="chat-conversation-view">
+                <div className="conversation-messages">
+                    {messages.map((msg) => (
+                        <div key={msg.id} className={`conversation-message ${msg.role}`}>
+                            <div className="message-avatar">
+                                {msg.role === 'user' ? '👤' : '🤖'}
                             </div>
-                            <h1>Asistente de Marketing</h1>
-                            <p className="welcome-subtitle">
-                                {hasTranscripts
-                                    ? `Pregunta lo que quieras. Buscaré en ${transcriptCount} transcripts.`
-                                    : 'Agrega transcripts para comenzar'}
-                            </p>
-
-                            {hasTranscripts ? (
-                                <div className="welcome-suggestions">
-                                    <button onClick={() => setInputValue('¿Cuáles son las técnicas de persuasión más usadas?')}>
-                                        <MessageSquare size={16} />
-                                        Técnicas de persuasión
-                                    </button>
-                                    <button onClick={() => setInputValue('¿Cómo crear urgencia efectiva en ventas?')}>
-                                        <MessageSquare size={16} />
-                                        Crear urgencia
-                                    </button>
-                                    <button onClick={() => setInputValue('Dame ejemplos de CTAs poderosos')}>
-                                        <MessageSquare size={16} />
-                                        CTAs poderosos
-                                    </button>
-                                    <button onClick={() => setInputValue('¿Qué técnicas de credibilidad se usan?')}>
-                                        <MessageSquare size={16} />
-                                        Técnicas de credibilidad
-                                    </button>
+                            <div className="message-body">
+                                <div className="message-sender">
+                                    {msg.role === 'user' ? 'Tú' : 'Asistente'}
                                 </div>
-                            ) : (
-                                <Link to="/add" className="welcome-add-btn">
-                                    <Plus size={20} />
-                                    Agregar primer transcript
-                                </Link>
-                            )}
+                                <div className="message-text">{msg.content}</div>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="chatgpt-conversation">
-                            {messages.map((msg) => (
-                                <div key={msg.id} className={`chatgpt-message ${msg.role}`}>
-                                    <div className="message-avatar">
-                                        {msg.role === 'user' ? '👤' : '🤖'}
-                                    </div>
-                                    <div className="message-content">
-                                        <div className="message-role">
-                                            {msg.role === 'user' ? 'Tú' : 'Asistente'}
-                                        </div>
-                                        <div className="message-text">{msg.content}</div>
-                                    </div>
-                                </div>
-                            ))}
+                    ))}
 
-                            {isSending && (
-                                <div className="chatgpt-message assistant">
-                                    <div className="message-avatar">🤖</div>
-                                    <div className="message-content">
-                                        <div className="message-role">Asistente</div>
-                                        <div className="message-text typing">
-                                            <Loader2 size={16} className="spinning" />
-                                            Buscando en {transcriptCount} transcripts...
-                                        </div>
-                                    </div>
+                    {isSending && (
+                        <div className="conversation-message assistant">
+                            <div className="message-avatar">🤖</div>
+                            <div className="message-body">
+                                <div className="message-sender">Asistente</div>
+                                <div className="message-text typing-indicator">
+                                    <Loader2 size={16} className="spinning" />
+                                    Buscando en {transcriptCount} transcripts...
                                 </div>
-                            )}
-
-                            <div ref={messagesEndRef} />
+                            </div>
                         </div>
                     )}
+
+                    <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area - Always at bottom */}
-                <div className="chatgpt-input-area">
-                    <form className="chatgpt-input-form" onSubmit={handleSendMessage}>
-                        <input
-                            ref={inputRef}
-                            type="text"
+                {/* Fixed input at bottom during conversation */}
+                <div className="conversation-input-wrapper">
+                    <form className="conversation-input-form" onSubmit={handleSendMessage}>
+                        <textarea
+                            ref={textareaRef}
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder={hasTranscripts ? "Pregunta sobre marketing..." : "Agrega transcripts para comenzar..."}
-                            disabled={isSending || !hasTranscripts}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Escribe tu mensaje..."
+                            disabled={isSending}
+                            rows={1}
                         />
-                        <button type="submit" disabled={isSending || !inputValue.trim() || !hasTranscripts}>
+                        <button type="submit" disabled={isSending || !inputValue.trim()}>
                             {isSending ? <Loader2 size={20} className="spinning" /> : <Send size={20} />}
                         </button>
                     </form>
-                    <p className="input-hint">
-                        {hasTranscripts
-                            ? `Base de conocimiento: ${transcriptCount} transcript${transcriptCount !== 1 ? 's' : ''}`
-                            : ''}
-                    </p>
                 </div>
             </div>
+        );
+    }
+
+    // Welcome screen with input at top
+    return (
+        <div className="chat-welcome-view">
+            {isLoading ? (
+                <div className="welcome-loading">
+                    <Loader2 size={40} className="spinning" />
+                    <p>Cargando base de conocimiento...</p>
+                </div>
+            ) : !hasTranscripts ? (
+                <div className="welcome-empty">
+                    <h2>Sin transcripts aún</h2>
+                    <p>Agrega transcripts para comenzar a hacer preguntas</p>
+                    <Link to="/add" className="add-transcript-btn">
+                        <Plus size={20} />
+                        Agregar Transcript
+                    </Link>
+                </div>
+            ) : (
+                <div className="welcome-content">
+                    {/* Large Input Area */}
+                    <div className="welcome-input-container">
+                        <textarea
+                            ref={textareaRef}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Quiero comenzar con..."
+                            rows={3}
+                        />
+                        {inputValue.trim() && (
+                            <button
+                                className="welcome-send-btn"
+                                onClick={handleSendMessage}
+                                disabled={isSending}
+                            >
+                                <Send size={20} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Quick Actions - Based on transcripts */}
+                    <div className="quick-actions">
+                        {quickSuggestions.map((action, index) => {
+                            const Icon = action.icon;
+                            return (
+                                <button
+                                    key={index}
+                                    className="quick-action-btn"
+                                    onClick={() => handleQuickAction(action.text)}
+                                >
+                                    <Icon size={18} style={{ color: action.color }} />
+                                    <span>{action.text}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <p className="transcript-count">
+                        {transcriptCount} transcript{transcriptCount !== 1 ? 's' : ''} en tu base de conocimiento
+                    </p>
+                </div>
+            )}
         </div>
     );
 };
