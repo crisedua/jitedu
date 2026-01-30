@@ -100,24 +100,11 @@ const GlobalChat = () => {
         // 1. Extract techniques/findings from AI analysis
         transcripts.forEach(t => {
             if (t.ai_analysis) {
-                // Check for techniques array
-                const techniques = t.ai_analysis.techniques || [];
                 // Check for summary.keyFindings
                 const findings = t.ai_analysis.summary?.keyFindings || [];
 
-                // Suggest explaining a technique
-                if (techniques.length > 0 && !usedTitles.has(t.id + '_tech')) {
-                    const tech = techniques[0]; // Take the first one found
-                    suggestions.push({
-                        icon: FileText,
-                        text: `Explícame la técnica: "${tech.name}"`,
-                        color: '#3B82F6'
-                    });
-                    usedTitles.add(t.id + '_tech');
-                }
-
                 // Suggest elaborating on a key finding
-                else if (findings.length > 0 && !usedTitles.has(t.id + '_find')) {
+                if (findings.length > 0 && !usedTitles.has(t.id + '_find')) {
                     // Truncate finding if too long
                     let findingText = findings[0];
                     if (findingText.length > 40) findingText = findingText.substring(0, 40) + '...';
@@ -132,7 +119,7 @@ const GlobalChat = () => {
             }
 
             // Fallback to simple title question if no analysis or we haven't used this transcript yet
-            if (t.title && !usedTitles.has(t.id + '_simple') && !usedTitles.has(t.id + '_tech') && !usedTitles.has(t.id + '_find')) {
+            if (t.title && !usedTitles.has(t.id + '_simple') && !usedTitles.has(t.id + '_find')) {
                 suggestions.push({
                     icon: FileText,
                     text: `Identificar lecciones clave en este contenido`,
@@ -235,6 +222,17 @@ const GlobalChat = () => {
     const transcriptCount = transcripts.length;
     const hasTranscripts = transcriptCount > 0;
 
+    // Function to remove markdown formatting
+    const stripMarkdown = (text) => {
+        if (!text) return text;
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold **text**
+            .replace(/\*(.*?)\*/g, '$1')     // Remove italic *text*
+            .replace(/`(.*?)`/g, '$1')       // Remove code `text`
+            .replace(/#{1,6}\s/g, '')        // Remove headers # ## ###
+            .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Remove links [text](url)
+    };
+
     // Show conversation view when there are messages
     if (messages.length > 0) {
         return (
@@ -246,7 +244,7 @@ const GlobalChat = () => {
                                 {msg.role === 'user' ? '👤' : '🤖'}
                             </div>
                             <div className="message-body">
-                                <div className="message-text">{msg.content}</div>
+                                <div className="message-text">{stripMarkdown(msg.content)}</div>
                             </div>
                         </div>
                     ))}
@@ -257,7 +255,7 @@ const GlobalChat = () => {
                             <div className="message-body">
                                 <div className="message-text typing-indicator">
                                     <Loader2 size={16} className="spinning" />
-                                    Buscando en {transcriptCount} transcripts...
+                                    Analizando contenido...
                                 </div>
                             </div>
                         </div>

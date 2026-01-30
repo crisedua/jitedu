@@ -1,4 +1,8 @@
 // OpenAI API Integration (formerly OpenRouter)
+import { retryWithBackoff, parseAPIError } from './api-retry';
+import { validateAIResponse, repairMalformedJSON } from './ai-response-validator';
+import { validateTranscript, getTranscriptStats } from './transcript-validator';
+
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
 const AI_MODEL = process.env.REACT_APP_AI_MODEL || 'gpt-4o';
 
@@ -13,13 +17,22 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const analyzeTranscriptWithAI = async (transcript, videoMetadata) => {
   if (!OPENAI_API_KEY) {
-    console.error('OpenAI API key not configured');
     throw new Error('La clave API de OpenAI es necesaria para el análisis de IA');
   }
 
+  // Validate and clean transcript
+  const validation = validateTranscript(transcript);
   const fullText = Array.isArray(transcript)
     ? transcript.map(segment => segment.text).join(' ')
-    : transcript;
+    : validation.cleanText;
+
+  const stats = getTranscriptStats(fullText);
+  
+  console.log(`🤖 Iniciando análisis con ${AI_MODEL}...`, {
+    wordCount: stats.wordCount,
+    estimatedTokens: stats.estimatedTokens,
+    language: stats.language
+  });
 
   const systemPrompt = `Eres un experto analista de marketing digital, copywriting, psicología de persuasión y estrategia de contenido con más de 20 años de experiencia.
 
@@ -185,81 +198,67 @@ ${fullText}
 - NO inventes técnicas que no estén evidenciadas en el texto`;
 
   try {
-    console.log(`🤖 Iniciando análisis con ${AI_MODEL}...`);
+    const analysis = await retryWithBackoff(async () => {
+      const response = await fetch(OPENAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: userPrompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+          response_format: { type: "json_object" } // Force JSON for OpenAI
+        })
+      });
 
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        response_format: { type: "json_object" } // Force JSON for OpenAI
-      })
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw parseAPIError(errorData, response);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('OpenAI API Error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-    }
+      return response.json();
+    }, 3, 1000, 30000); // 3 retries, 1s base delay, 30s max delay
 
-    const data = await response.json();
     console.log('✅ Respuesta recibida de OpenAI');
 
-    const content = data.choices[0]?.message?.content;
+    const content = analysis.choices[0]?.message?.content;
 
     if (!content) {
       throw new Error('No se recibió contenido de la IA');
     }
 
-    // Parse the JSON response
-    let analysis;
+    // Parse and repair JSON if needed
+    let parsedAnalysis;
     try {
-      analysis = JSON.parse(content);
+      parsedAnalysis = JSON.parse(content);
     } catch (parseError) {
-      console.error('JSON Parse Error:', parseError);
-      console.log('Raw content:', content);
-      throw new Error('Error al parsear la respuesta de la IA');
+      console.warn('JSON malformado, intentando reparar...');
+      parsedAnalysis = repairMalformedJSON(content);
     }
 
-    // Validate and format the response
+    // Validate and sanitize the response
+    const { sanitizedResponse } = validateAIResponse(parsedAnalysis);
+
+    // Add metadata
     const formattedAnalysis = {
-      suggestedTitle: analysis.suggestedTitle,
-      summary: analysis.summary || {
-        overview: 'Análisis completado',
-        keyFindings: [],
-        recommendations: []
-      },
-      techniques: (analysis.techniques || []).map(technique => ({
-        id: `${technique.category}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: technique.name,
-        category: technique.category,
-        description: technique.description,
-        objective: technique.objective,
-        funnelStage: technique.funnelStage,
-        evidence: technique.evidence || [],
-        confidence: technique.confidence || 0.8
-      })),
+      ...sanitizedResponse,
+      suggestedTitle: parsedAnalysis.suggestedTitle,
       analysisMetadata: {
-        processedAt: new Date().toISOString(),
-        model: AI_MODEL,
-        transcriptLength: fullText.length,
-        techniquesFound: analysis.techniques?.length || 0,
-        tokensUsed: data.usage?.total_tokens || 0
+        ...sanitizedResponse.analysisMetadata,
+        transcriptStats: stats,
+        tokensUsed: analysis.usage?.total_tokens || 0
       }
     };
 
@@ -279,8 +278,12 @@ ${fullText}
       throw new Error('Error al procesar la respuesta de la IA. Por favor, intenta de nuevo.');
     }
 
-    if (error.message.includes('429')) {
-      throw new Error('Límite de peticiones alcanzado (Quota exceeded). Por favor, intenta de nuevo más tarde.');
+    if (error.statusCode === 429) {
+      throw new Error('Límite de peticiones alcanzado. Por favor, intenta de nuevo más tarde.');
+    }
+
+    if (error.statusCode >= 500) {
+      throw new Error('Error del servidor de OpenAI. Reintentando automáticamente...');
     }
 
     throw error;
@@ -468,7 +471,7 @@ IMPORTANTE:
   ];
 
   try {
-    console.log(`🔍 Buscando en ${transcripts.length} transcripts...`);
+    console.log(`🔍 Analizando contenido...`);
 
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
