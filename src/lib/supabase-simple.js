@@ -63,6 +63,7 @@ export const saveTranscript = async (title, transcriptText, aiAnalysis = null) =
   }
 };
 
+// eslint-disable-next-line no-unused-vars
 export const updateTranscriptAnalysis = async (transcriptId, aiAnalysis, status = 'completed') => {
   try {
     if (!supabase) throw new Error('No Supabase client');

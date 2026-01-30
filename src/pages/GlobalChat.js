@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Loader2, MessageSquare, Plus, FileText, Lightbulb } from 'lucide-react';
 import { chatWithAllTranscripts, analyzeTranscriptWithAI } from '../lib/openrouter';
-import { getRecentTranscripts, updateTranscriptAnalysis, updateTranscriptFields, deleteTranscript } from '../lib/supabase-simple';
+import { getRecentTranscripts, updateTranscriptFields, deleteTranscript } from '../lib/supabase-simple';
 
 const GlobalChat = () => {
     const messagesEndRef = useRef(null);
