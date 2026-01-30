@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Loader2, AlertCircle, FileText, ArrowLeft, Brain } from 'lucide-react';
+import { Send, Loader2, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 import { saveTranscript, updateTranscriptFields } from '../lib/supabase-simple';
 import { analyzeTranscriptWithAI } from '../lib/openrouter';
 
