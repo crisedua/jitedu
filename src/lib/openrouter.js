@@ -34,7 +34,7 @@ Tu tarea es realizar un ANÁLISIS EXHAUSTIVO Y PROFUNDO del transcript proporcio
 - Garantías, reversión de riesgo, pruebas gratuitas
 - Anclaje de precios y comparaciones
 - Cierre de ventas (técnicas específicas usadas)
-- FOMO (Fear of Missing Out)
+- Miedo a perder la oportunidad (Fear of Missing Out - describir la situación)
 - Exclusividad y acceso limitado
 
 ### 2. CREDIBILIDAD Y AUTORIDAD
@@ -100,7 +100,8 @@ Tu tarea es realizar un ANÁLISIS EXHAUSTIVO Y PROFUNDO del transcript proporcio
 6. Identifica patrones y combinaciones de técnicas
 7. Evalúa la sofisticación general del contenido
 
-Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional.`;
+Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional.
+IMPORTANTE: Al generar el resumen y los hallazgos, EVITA mencionar nombres propios de personas, marcas pequeñas o casos de estudio específicos (ej: no digas "El caso de Cleo", di "El caso de la app financiera"). Mantén el análisis centrado en las estrategias, anonimizando a los protagonistas a menos que sean figuras públicas universales (ej: Steve Jobs).`;
 
   const userPrompt = `Realiza un ANÁLISIS EXHAUSTIVO de este transcript. Quiero el análisis MÁS COMPLETO Y DETALLADO posible.
 
@@ -109,8 +110,9 @@ ${fullText}
 
 **FORMATO DE RESPUESTA (JSON):**
 {
-  "summary": {
-    "overview": "Resumen ejecutivo detallado del contenido, enfoque principal, y estrategia general de marketing/persuasión detectada (4-6 oraciones)",
+    "suggestedTitle": "Un título corto, atractivo y descriptivo para este video (max 6-8 palabras)",
+    "summary": {
+      "overview": "Resumen ejecutivo detallado del contenido, enfoque principal, y estrategia general de marketing/persuasión detectada (4-6 oraciones)",
     "targetAudience": "Descripción del público objetivo inferido del contenido",
     "mainObjective": "Objetivo principal del contenido (vender, educar, generar leads, etc.)",
     "sophisticationLevel": "Nivel de sofisticación del marketing: básico/intermedio/avanzado/experto",
@@ -236,6 +238,7 @@ ${fullText}
 
     // Validate and format the response
     const formattedAnalysis = {
+      suggestedTitle: analysis.suggestedTitle,
       summary: analysis.summary || {
         overview: 'Análisis completado',
         keyFindings: [],
@@ -437,13 +440,20 @@ FORMATO DE RESPUESTA:
 - Sé detallado pero organizado
 - Usa bullets o numeración cuando sea apropiado
 - Incluye citas textuales de los transcripts cuando hay ejemplos relevantes
-- Indica de qué transcript viene la información cuando sea posible
+- NO menciones los nombres de los archivos o transcripts (ej: "En el transcript 1..."). Refiérete simplemente al "contenido", "el video" o "el material".
+- Céntrate en las técnicas y estrategias, no en los oradores específicos.
 
 BASE DE CONOCIMIENTO (${transcripts.length} transcripts):
 
 ${knowledgeBase}
 
 IMPORTANTE:
+- NO uses términos de jerga/siglas sueltas como "FOMO", "AIDA" o "Pain Point" como la explicación principal. Describe la dinámica: "Genera miedo a perder la oportunidad" en lugar de "Usa FOMO".
+- SIEMPRE incluye el CONTEXTO de la táctica: Explica la situación específica donde ocurre (el "cómo" y "cuándo"), no solo el nombre de la técnica.
+- NO menciones nombres propios de personas, marcas específicas (ej: Cleo, Zara, Apple) o Casos de Estudio por su nombre propio, a menos que sea una marca mundialmente reconocida usada como ejemplo genérico.
+- En lugar de "Como se menciona en el caso de Cleo...", di "Como se menciona en el ejemplo de finanzas..." o "En el caso analizado...".
+- GENERALIZA los ejemplos: "la experta en marketing", "la empresa de software", "el cliente".
+- Céntrate puramente en la TÉCNICA y su APLICACIÓN PRÁCTICA.
 - Responde en español
 - Basa tus respuestas ÚNICAMENTE en el contenido de los transcripts
 - Si no encuentras información relevante, dilo claramente`;

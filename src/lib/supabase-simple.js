@@ -269,4 +269,35 @@ export const clearChatMessages = async (transcriptId) => {
   localStorage.setItem('local_chats', JSON.stringify(allChats));
 };
 
+export const updateTranscriptFields = async (transcriptId, fields) => {
+  try {
+    if (!supabase) throw new Error('No Supabase client');
+
+    const { data, error } = await supabase
+      .from('transcripts')
+      .update(fields)
+      .eq('id', transcriptId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+
+  } catch (error) {
+    console.warn('Database update error, falling back to localStorage:', error);
+
+    // LocalStorage Fallback
+    const stored = JSON.parse(localStorage.getItem('local_transcripts') || '[]');
+    const index = stored.findIndex(t => t.id === transcriptId);
+
+    if (index !== -1) {
+      stored[index] = { ...stored[index], ...fields };
+      localStorage.setItem('local_transcripts', JSON.stringify(stored));
+      return stored[index];
+    }
+
+    throw new Error('Transcript not found in local storage');
+  }
+};
+
 export { supabase };

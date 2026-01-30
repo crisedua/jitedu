@@ -5,6 +5,7 @@ import { saveTranscript } from '../lib/supabase-simple';
 
 const AddTranscript = () => {
     const navigate = useNavigate();
+    const [title, setTitle] = useState('');
     const [transcript, setTranscript] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState(null);
@@ -25,7 +26,7 @@ const AddTranscript = () => {
 
         try {
             // Save the transcript to the knowledge base
-            await saveTranscript(null, transcript, null);
+            await saveTranscript(title, transcript, null);
 
             setSuccess(true);
             setTranscript('');
@@ -68,6 +69,18 @@ const AddTranscript = () => {
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="transcript-form">
+                        <div className="form-group">
+                            <label htmlFor="title">Título (Opcional)</label>
+                            <input
+                                id="title"
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Ej: Video de Ventas 2024"
+                                disabled={isProcessing}
+                            />
+                        </div>
+
                         <div className="form-group">
                             <label htmlFor="transcript">
                                 Transcript

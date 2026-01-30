@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, Loader2, MessageSquare, Plus, FileText, Lightbulb } from 'lucide-react';
 import { chatWithAllTranscripts, analyzeTranscriptWithAI } from '../lib/openrouter';
-import { getRecentTranscripts, updateTranscriptAnalysis } from '../lib/supabase-simple';
+import { getRecentTranscripts, updateTranscriptAnalysis, updateTranscriptFields, deleteTranscript } from '../lib/supabase-simple';
 
 const GlobalChat = () => {
     const messagesEndRef = useRef(null);
@@ -13,6 +13,7 @@ const GlobalChat = () => {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
+    const [showTranscriptList, setShowTranscriptList] = useState(false);
 
     // Load all transcripts on mount
     useEffect(() => {
@@ -28,6 +29,14 @@ const GlobalChat = () => {
         };
         loadTranscripts();
     }, []);
+
+    const handleDeleteTranscript = async (id, e) => {
+        e.stopPropagation();
+        if (window.confirm('¿Estás seguro de que quieres eliminar este transcript?')) {
+            await deleteTranscript(id);
+            setTranscripts(prev => prev.filter(t => t.id !== id));
+        }
+    };
 
     // Check for un-analyzed transcripts
     const pendingTranscripts = useMemo(() => {
@@ -52,11 +61,25 @@ const GlobalChat = () => {
                 const analysis = await analyzeTranscriptWithAI(t.transcript_text, { title: t.title });
 
                 // Save
-                await updateTranscriptAnalysis(t.id, analysis);
+                const updates = {
+                    ai_analysis: analysis,
+                    status: 'completed'
+                };
+
+                // Update title if we have a suggestion and current is generic
+                if (analysis.suggestedTitle && (!t.title || t.title === 'Sin título' || t.title.startsWith('Transcript '))) {
+                    updates.title = analysis.suggestedTitle;
+                }
+
+                await updateTranscriptFields(t.id, updates);
 
                 // Update local state to reflect change immediately
                 setTranscripts(prev => prev.map(pt =>
-                    pt.id === t.id ? { ...pt, ai_analysis: analysis } : pt
+                    pt.id === t.id ? {
+                        ...pt,
+                        ai_analysis: analysis,
+                        title: updates.title || pt.title
+                    } : pt
                 ));
             }
         } catch (err) {
@@ -87,7 +110,7 @@ const GlobalChat = () => {
                     const tech = techniques[0]; // Take the first one found
                     suggestions.push({
                         icon: FileText,
-                        text: `Explícame la técnica de "${tech.name}" en "${t.title}"`,
+                        text: `Explícame la técnica: "${tech.name}"`,
                         color: '#3B82F6'
                     });
                     usedTitles.add(t.id + '_tech');
@@ -101,7 +124,7 @@ const GlobalChat = () => {
 
                     suggestions.push({
                         icon: Lightbulb,
-                        text: `Dime más sobre: "${findingText}" en "${t.title}"`,
+                        text: `Profundizar en: "${findingText}"`,
                         color: '#F59E0B'
                     });
                     usedTitles.add(t.id + '_find');
@@ -112,7 +135,7 @@ const GlobalChat = () => {
             if (t.title && !usedTitles.has(t.id + '_simple') && !usedTitles.has(t.id + '_tech') && !usedTitles.has(t.id + '_find')) {
                 suggestions.push({
                     icon: FileText,
-                    text: `¿Qué puedo aprender de "${t.title}"?`,
+                    text: `Identificar lecciones clave en este contenido`,
                     color: '#3B82F6'
                 });
                 usedTitles.add(t.id + '_simple');
@@ -223,9 +246,6 @@ const GlobalChat = () => {
                                 {msg.role === 'user' ? '👤' : '🤖'}
                             </div>
                             <div className="message-body">
-                                <div className="message-sender">
-                                    {msg.role === 'user' ? 'Tú' : 'Asistente'}
-                                </div>
                                 <div className="message-text">{msg.content}</div>
                             </div>
                         </div>
@@ -235,7 +255,6 @@ const GlobalChat = () => {
                         <div className="conversation-message assistant">
                             <div className="message-avatar">🤖</div>
                             <div className="message-body">
-                                <div className="message-sender">Asistente</div>
                                 <div className="message-text typing-indicator">
                                     <Loader2 size={16} className="spinning" />
                                     Buscando en {transcriptCount} transcripts...
@@ -362,9 +381,32 @@ const GlobalChat = () => {
                         })}
                     </div>
 
-                    <p className="transcript-count">
-                        {transcriptCount} transcript{transcriptCount !== 1 ? 's' : ''} en tu base de conocimiento
-                    </p>
+                    <div className="transcript-management" style={{ textAlign: 'center', marginTop: '20px' }}>
+                        <button
+                            onClick={() => setShowTranscriptList(!showTranscriptList)}
+                            style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.85rem' }}
+                        >
+                            {showTranscriptList ? 'Ocultar Transcripts' : 'Gestionar Transcripts'}
+                        </button>
+
+                        {showTranscriptList && (
+                            <div className="transcript-list" style={{ marginTop: '10px', maxHeight: '200px', overflowY: 'auto', textAlign: 'left', background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                {transcripts.map(t => (
+                                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #F3F4F6' }}>
+                                        <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
+                                            {t.title || 'Sin título'}
+                                        </span>
+                                        <button
+                                            onClick={(e) => handleDeleteTranscript(t.id, e)}
+                                            style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
