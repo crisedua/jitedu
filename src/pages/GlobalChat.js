@@ -99,27 +99,8 @@ const GlobalChat = () => {
 
         // 1. Extract techniques/findings from AI analysis
         transcripts.forEach(t => {
-            if (t.ai_analysis) {
-                // Check for summary.keyFindings
-                const findings = t.ai_analysis.summary?.keyFindings || [];
-
-                // Suggest elaborating on a key finding
-                if (findings.length > 0 && !usedTitles.has(t.id + '_find')) {
-                    // Truncate finding if too long
-                    let findingText = findings[0];
-                    if (findingText.length > 40) findingText = findingText.substring(0, 40) + '...';
-
-                    suggestions.push({
-                        icon: Lightbulb,
-                        text: `Profundizar en: "${findingText}"`,
-                        color: '#F59E0B'
-                    });
-                    usedTitles.add(t.id + '_find');
-                }
-            }
-
             // Fallback to simple title question if no analysis or we haven't used this transcript yet
-            if (t.title && !usedTitles.has(t.id + '_simple') && !usedTitles.has(t.id + '_find')) {
+            if (t.title && !usedTitles.has(t.id + '_simple')) {
                 suggestions.push({
                     icon: FileText,
                     text: `Identificar lecciones clave en este contenido`,

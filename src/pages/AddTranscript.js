@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Loader2, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
-import { saveTranscript } from '../lib/supabase-simple';
+import { Send, Loader2, AlertCircle, FileText, ArrowLeft, Brain } from 'lucide-react';
+import { saveTranscript, updateTranscriptFields } from '../lib/supabase-simple';
+import { analyzeTranscriptWithAI } from '../lib/openrouter';
 
 const AddTranscript = () => {
     const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [transcript, setTranscript] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [analysisComplete, setAnalysisComplete] = useState(false);
 
     const wordCount = transcript.trim().split(/\s+/).filter(w => w).length;
 
@@ -25,16 +28,53 @@ const AddTranscript = () => {
         setError(null);
 
         try {
-            // Save the transcript to the knowledge base
-            await saveTranscript(title, transcript, null);
-
+            // Step 1: Save the transcript to the knowledge base
+            const savedTranscript = await saveTranscript(title || 'Sin título', transcript, null);
+            
             setSuccess(true);
-            setTranscript('');
+            setIsProcessing(false);
+            setIsAnalyzing(true);
 
-            // Redirect to chat after a moment
-            setTimeout(() => {
-                navigate('/');
-            }, 1500);
+            // Step 2: Automatically analyze the transcript
+            try {
+                const analysis = await analyzeTranscriptWithAI(transcript, { 
+                    title: title || 'Sin título' 
+                });
+
+                // Step 3: Update the transcript with analysis
+                const updates = {
+                    ai_analysis: analysis,
+                    status: 'completed'
+                };
+
+                // Update title if we have a suggestion and current is generic
+                if (analysis.suggestedTitle && (!title || title === 'Sin título')) {
+                    updates.title = analysis.suggestedTitle;
+                }
+
+                await updateTranscriptFields(savedTranscript.id, updates);
+                
+                setAnalysisComplete(true);
+                setIsAnalyzing(false);
+
+                // Redirect to chat after analysis is complete
+                setTimeout(() => {
+                    navigate('/');
+                }, 2000);
+
+            } catch (analysisError) {
+                console.error('Error analyzing transcript:', analysisError);
+                setIsAnalyzing(false);
+                
+                // Still redirect to chat even if analysis fails
+                setTimeout(() => {
+                    navigate('/');
+                }, 1500);
+            }
+
+            // Clear form
+            setTranscript('');
+            setTitle('');
 
         } catch (err) {
             console.error('Error saving transcript:', err);
@@ -64,8 +104,25 @@ const AddTranscript = () => {
 
                 {success ? (
                     <div className="success-message">
-                        <span>✅ Transcript guardado exitosamente!</span>
-                        <p>Redirigiendo al chat...</p>
+                        {!isAnalyzing && !analysisComplete ? (
+                            <>
+                                <span>✅ Transcript guardado exitosamente!</span>
+                                <p>Redirigiendo al chat...</p>
+                            </>
+                        ) : isAnalyzing ? (
+                            <>
+                                <span>🧠 Analizando con IA...</span>
+                                <div className="analysis-progress">
+                                    <Loader2 size={24} className="spinning" />
+                                    <p>Detectando técnicas de marketing y persuasión...</p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <span>✨ Análisis completado!</span>
+                                <p>Transcript guardado y analizado. Redirigiendo al chat...</p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="transcript-form">
@@ -111,7 +168,7 @@ const AddTranscript = () => {
                         <button
                             type="submit"
                             className="submit-button"
-                            disabled={isProcessing || !transcript.trim()}
+                            disabled={isProcessing || isAnalyzing || !transcript.trim()}
                         >
                             {isProcessing ? (
                                 <>
@@ -121,7 +178,7 @@ const AddTranscript = () => {
                             ) : (
                                 <>
                                     <Send size={20} />
-                                    Guardar Transcript
+                                    Guardar y Analizar
                                 </>
                             )}
                         </button>
