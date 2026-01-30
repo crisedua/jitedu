@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, User, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const { signIn, signUp } = useAuth();
+    const { signIn, signUp, user } = useAuth();
+    const navigate = useNavigate();
 
     const [isRegistering, setIsRegistering] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -14,6 +16,12 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    useEffect(() => {
+        if (user) {
+            navigate('/');
+        }
+    }, [user, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -23,16 +31,20 @@ const Login = () => {
         try {
             if (isRegistering) {
                 // Register flow
-                const { user } = await signUp(name, email, password);
-                if (user && !user.email_confirmed_at) {
-                    // Usually Supabase requires email confirmation by default, 
-                    // but if "Enable email cconfirmations" is OFF, they are logged in immediately.
-                    // We'll show a message just in case.
-                    setMessage('Cuenta creada! Por favor revisa tu email para confirmar (si es necesario).');
+                // signUp returns { user, session } inside data
+                const { user, session } = await signUp(name, email, password);
+
+                // If session exists, the user is logged in immediately (no email confirm needed)
+                // The useEffect will handle the redirect.
+
+                // If user exists but NO session, then email confirmation is required.
+                if (user && !session) {
+                    setMessage('Cuenta creada! Por favor revisa tu email para confirmar.');
                 }
             } else {
                 // Login flow
                 await signIn(email, password);
+                // On success, user state updates and useEffect redirects
             }
         } catch (err) {
             console.error(err);
