@@ -91,6 +91,7 @@ const validateAndSanitizeTechnique = (technique, index) => {
   };
 };
 
+// eslint-disable-next-line no-unused-vars
 const validateTechnique = (technique, index) => {
   // This function is kept for backward compatibility but made more lenient
   if (!technique.name) {
