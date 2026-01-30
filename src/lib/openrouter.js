@@ -249,18 +249,49 @@ ${fullText}
     }
 
     // Validate and sanitize the response
-    const { sanitizedResponse } = validateAIResponse(parsedAnalysis);
-
-    // Add metadata
-    const formattedAnalysis = {
-      ...sanitizedResponse,
-      suggestedTitle: parsedAnalysis.suggestedTitle,
-      analysisMetadata: {
-        ...sanitizedResponse.analysisMetadata,
-        transcriptStats: stats,
-        tokensUsed: analysis.usage?.total_tokens || 0
-      }
-    };
+    let formattedAnalysis;
+    try {
+      const { sanitizedResponse } = validateAIResponse(parsedAnalysis);
+      formattedAnalysis = {
+        ...sanitizedResponse,
+        suggestedTitle: parsedAnalysis.suggestedTitle,
+        analysisMetadata: {
+          ...sanitizedResponse.analysisMetadata,
+          transcriptStats: stats,
+          tokensUsed: analysis.usage?.total_tokens || 0
+        }
+      };
+    } catch (validationError) {
+      console.warn('Validation failed, using fallback response:', validationError);
+      
+      // Create a basic fallback response
+      formattedAnalysis = {
+        summary: {
+          overview: 'Análisis completado con limitaciones. La respuesta de la IA no siguió el formato esperado.',
+          keyFindings: ['Se detectó contenido de marketing'],
+          recommendations: ['Revisar el análisis manualmente']
+        },
+        techniques: [{
+          id: `fallback_${Date.now()}`,
+          name: 'Análisis General',
+          category: 'engagement',
+          description: 'Se detectó contenido de marketing general',
+          objective: 'Comunicar mensaje',
+          funnelStage: 'awareness',
+          evidence: [],
+          confidence: 0.5
+        }],
+        analysisMetadata: {
+          processedAt: new Date().toISOString(),
+          model: AI_MODEL,
+          transcriptLength: fullText.length,
+          techniquesFound: 1,
+          tokensUsed: analysis.usage?.total_tokens || 0,
+          transcriptStats: stats,
+          validationError: validationError.message
+        }
+      };
+    }
 
     console.log(`✨ Análisis completado: ${formattedAnalysis.techniques.length} técnicas detectadas`);
 

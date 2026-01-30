@@ -95,22 +95,8 @@ const GlobalChat = () => {
         if (transcripts.length === 0) return [];
 
         const suggestions = [];
-        const usedTitles = new Set();
 
-        // 1. Extract techniques/findings from AI analysis
-        transcripts.forEach(t => {
-            // Fallback to simple title question if no analysis or we haven't used this transcript yet
-            if (t.title && !usedTitles.has(t.id + '_simple')) {
-                suggestions.push({
-                    icon: FileText,
-                    text: `Identificar lecciones clave en este contenido`,
-                    color: '#3B82F6'
-                });
-                usedTitles.add(t.id + '_simple');
-            }
-        });
-
-        // 2. Add comparison if we have multiple transcripts
+        // 1. Add comparison if we have multiple transcripts
         if (transcripts.length > 1) {
             suggestions.push({
                 icon: MessageSquare,
@@ -119,30 +105,33 @@ const GlobalChat = () => {
             });
         }
 
-        // 3. Add general marketing questions to fill gaps
+        // 2. Add general marketing questions
         const generalQuestions = [
             { text: '¿Cuáles son los hooks más efectivos detectados?', color: '#8B5CF6' },
             { text: '¿Qué patrones de cierre de ventas se repiten?', color: '#EF4444' },
             { text: 'Analizar la estructura de los guiones', color: '#EC4899' },
-            { text: '¿Qué técnicas de psicología se usan?', color: '#F59E0B' }
+            { text: '¿Qué técnicas de psicología se usan?', color: '#F59E0B' },
+            { text: 'Identificar las mejores prácticas de copywriting', color: '#3B82F6' },
+            { text: 'Encontrar patrones de storytelling efectivos', color: '#10B981' },
+            { text: 'Analizar técnicas de manejo de objeciones', color: '#F59E0B' },
+            { text: 'Detectar elementos de autoridad y credibilidad', color: '#8B5CF6' }
         ];
 
-        // Shuffle and fill
-        const finalSuggestions = suggestions.slice(0, 4);
-        while (finalSuggestions.length < 4) {
-            const nextGen = generalQuestions.shift();
-            if (nextGen) {
-                finalSuggestions.push({
+        // Shuffle the questions to provide variety
+        const shuffledQuestions = [...generalQuestions].sort(() => Math.random() - 0.5);
+
+        // Add questions to fill up to 4 suggestions
+        for (let i = 0; i < Math.min(4, shuffledQuestions.length); i++) {
+            if (suggestions.length < 4) {
+                suggestions.push({
                     icon: MessageSquare,
-                    text: nextGen.text,
-                    color: nextGen.color
+                    text: shuffledQuestions[i].text,
+                    color: shuffledQuestions[i].color
                 });
-            } else {
-                break;
             }
         }
 
-        return finalSuggestions.slice(0, 4);
+        return suggestions.slice(0, 4);
     }, [transcripts]);
 
     // Auto-resize textarea
