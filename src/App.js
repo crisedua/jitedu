@@ -27,13 +27,11 @@ function App() {
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
 
-            {/* Protected Routes with Layout */}
+            {/* Public Home Route (Login required for interactions) */}
             <Route path="/" element={
-              <ProtectedRoute>
-                <Layout>
-                  <GlobalChat />
-                </Layout>
-              </ProtectedRoute>
+              <Layout>
+                <GlobalChat />
+              </Layout>
             } />
 
             <Route path="/add" element={

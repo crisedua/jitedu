@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Send, Loader2, MessageSquare, Plus } from 'lucide-react';
 import { chatWithAllTranscripts, analyzeTranscriptWithAI } from '../lib/openrouter';
 import { getRecentTranscripts, updateTranscriptFields, deleteTranscript } from '../lib/supabase-simple';
+import { useAuth } from '../context/AuthContext';
 
 const GlobalChat = () => {
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [transcripts, setTranscripts] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -47,6 +50,11 @@ const GlobalChat = () => {
     const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
 
     const handleAnalyzePending = async () => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
         if (pendingTranscripts.length === 0) return;
 
         setIsAnalyzingPending(true);
@@ -105,15 +113,15 @@ const GlobalChat = () => {
             });
         }
 
-        // 2. Add general marketing questions
+        // 2. Add general questions
         const generalQuestions = [
-            { text: '¿Cuáles son los hooks más efectivos detectados?', color: '#8B5CF6' },
-            { text: '¿Qué patrones de cierre de ventas se repiten?', color: '#EF4444' },
-            { text: 'Analizar la estructura de los guiones', color: '#EC4899' },
-            { text: '¿Qué técnicas de psicología se usan?', color: '#F59E0B' },
-            { text: 'Identificar las mejores prácticas de copywriting', color: '#3B82F6' },
-            { text: 'Encontrar patrones de storytelling efectivos', color: '#10B981' },
-            { text: 'Analizar técnicas de manejo de objeciones', color: '#F59E0B' },
+            { text: '¿Cuáles son los puntos clave de este conocimiento?', color: '#8B5CF6' },
+            { text: 'Resume las ideas principales de los contenidos', color: '#EF4444' },
+            { text: 'Extrae una lista de acciones recomendadas', color: '#EC4899' },
+            { text: '¿Qué conceptos fundamentales se explican aquí?', color: '#F59E0B' },
+            { text: 'Identifica las mejores prácticas mencionadas', color: '#3B82F6' },
+            { text: 'Encuentra patrones comunes entre los documentos', color: '#10B981' },
+            { text: 'Analiza la estructura de la información presentada', color: '#F59E0B' },
             { text: 'Detectar elementos de autoridad y credibilidad', color: '#8B5CF6' }
         ];
 
@@ -150,6 +158,14 @@ const GlobalChat = () => {
     const handleSendMessage = async (e) => {
         e?.preventDefault();
 
+        // Must be logged in to send
+        if (!user) {
+            if (window.confirm('Debes iniciar sesión para chatear. ¿Ir al login?')) {
+                navigate('/login');
+            }
+            return;
+        }
+
         if (!inputValue.trim() || isSending) return;
 
         const question = inputValue.trim();
@@ -185,6 +201,12 @@ const GlobalChat = () => {
     };
 
     const handleQuickAction = (text) => {
+        if (!user) {
+            if (window.confirm('Debes iniciar sesión para usar esta acción. ¿Ir al login?')) {
+                navigate('/login');
+            }
+            return;
+        }
         setInputValue(text);
         textareaRef.current?.focus();
     };
@@ -281,7 +303,7 @@ const GlobalChat = () => {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Quiero comenzar con..."
+                            placeholder={user ? "Quiero comenzar con..." : "Inicia sesión para preguntar..."}
                             rows={3}
                         />
                         <button

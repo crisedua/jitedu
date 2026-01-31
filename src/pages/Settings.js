@@ -9,61 +9,61 @@ const Settings = () => {
     maxBatchSize: 50,
     confidenceThreshold: 0.7
   });
-  
+
   const [categories, setCategories] = useState([
-    { id: 'conversion', name: 'Conversión', description: 'Técnicas para incrementar conversiones' },
-    { id: 'credibility', name: 'Credibilidad', description: 'Técnicas para construir confianza' },
-    { id: 'engagement', name: 'Engagement', description: 'Técnicas para aumentar engagement' },
-    { id: 'awareness', name: 'Awareness', description: 'Técnicas para generar awareness' }
+    { id: 'concepts', name: 'Conceptos Clave', description: 'Ideas fundamentales y definiciones' },
+    { id: 'evidence', name: 'Evidencia', description: 'Datos, estadísticas y pruebas' },
+    { id: 'communication', name: 'Comunicación', description: 'Estrategias de transmisión de mensaje' },
+    { id: 'context', name: 'Contexto', description: 'Antecedentes y situación' }
   ]);
-  
+
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const handleSettingChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
-  
+
   const handleSaveSettings = async () => {
     setIsSaving(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // In a real app, save to database/API
     console.log('Settings saved:', settings);
-    
+
     setIsSaving(false);
     // Show success message
   };
-  
+
   const addCategory = () => {
     if (!newCategory.name.trim()) return;
-    
+
     const category = {
       id: newCategory.name.toLowerCase().replace(/\s+/g, '_'),
       name: newCategory.name,
       description: newCategory.description
     };
-    
+
     setCategories(prev => [...prev, category]);
     setNewCategory({ name: '', description: '' });
   };
-  
+
   const updateCategory = (id, updates) => {
-    setCategories(prev => prev.map(cat => 
+    setCategories(prev => prev.map(cat =>
       cat.id === id ? { ...cat, ...updates } : cat
     ));
     setEditingCategory(null);
   };
-  
+
   const deleteCategory = (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
       setCategories(prev => prev.filter(cat => cat.id !== id));
     }
   };
-  
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -73,11 +73,11 @@ const Settings = () => {
           Personaliza las preferencias de análisis y gestión de técnicas
         </p>
       </div>
-      
+
       {/* General Settings */}
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Configuración General</h2>
-        
+
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -97,7 +97,7 @@ const Settings = () => {
                 Idioma preferido para la extracción de transcripts
               </p>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profundidad del Análisis
@@ -116,7 +116,7 @@ const Settings = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -134,7 +134,7 @@ const Settings = () => {
                 Número máximo de videos por proyecto
               </p>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Umbral de Confianza
@@ -160,7 +160,7 @@ const Settings = () => {
               </p>
             </div>
           </div>
-          
+
           <div>
             <label className="flex items-center gap-3">
               <input
@@ -181,11 +181,11 @@ const Settings = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Categories Management */}
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Gestión de Categorías</h2>
-        
+
         {/* Add New Category */}
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
           <h3 className="font-medium text-gray-900 mb-3">Añadir Nueva Categoría</h3>
@@ -224,7 +224,7 @@ const Settings = () => {
             Añadir Categoría
           </button>
         </div>
-        
+
         {/* Categories List */}
         <div className="space-y-3">
           {categories.map(category => (
@@ -250,7 +250,7 @@ const Settings = () => {
                   <p className="text-sm text-gray-600">{category.description}</p>
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2">
                 {editingCategory === category.id ? (
                   <>
@@ -288,11 +288,11 @@ const Settings = () => {
           ))}
         </div>
       </div>
-      
+
       {/* API Configuration */}
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Configuración de APIs</h2>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -304,13 +304,13 @@ const Settings = () => {
               className="input"
             />
             <p className="text-sm text-gray-500 mt-1">
-              Necesaria para obtener metadata de videos. 
+              Necesaria para obtener metadata de videos.
               <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
                 Obtener API key
               </a>
             </p>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               OpenAI API Key
@@ -329,7 +329,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Save Button */}
       <div className="flex justify-end">
         <button

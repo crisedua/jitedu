@@ -1,6 +1,6 @@
-# Marketing Transcript Analyzer
+# Conocimiento on Demand
 
-Una aplicación web para analistas de marketing y creadores de contenido que permite analizar transcripts de videos con IA para identificar estrategias y tácticas de marketing, crecimiento y ventas.
+Una aplicación web de IA Conversacional y Base de Conocimiento que permite analizar contenido y realizar consultas inteligentes sobre toda tu biblioteca de información.
 
 ## 🚀 Características Principales
 

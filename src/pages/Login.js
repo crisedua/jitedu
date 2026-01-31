@@ -62,7 +62,7 @@ const Login = () => {
                         <Sparkles size={40} />
                     </div>
                     <h1>{isRegistering ? 'Crear Cuenta' : 'Bienvenido'}</h1>
-                    <p>Asistente de Marketing Inteligente</p>
+                    <p>IA Conversacional y Base de Conocimiento</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">

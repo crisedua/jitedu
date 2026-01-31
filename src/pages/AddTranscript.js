@@ -30,15 +30,15 @@ const AddTranscript = () => {
         try {
             // Step 1: Save the transcript to the knowledge base
             const savedTranscript = await saveTranscript(title || 'Sin título', transcript, null);
-            
+
             setSuccess(true);
             setIsProcessing(false);
             setIsAnalyzing(true);
 
             // Step 2: Automatically analyze the transcript
             try {
-                const analysis = await analyzeTranscriptWithAI(transcript, { 
-                    title: title || 'Sin título' 
+                const analysis = await analyzeTranscriptWithAI(transcript, {
+                    title: title || 'Sin título'
                 });
 
                 // Step 3: Update the transcript with analysis
@@ -53,7 +53,7 @@ const AddTranscript = () => {
                 }
 
                 await updateTranscriptFields(savedTranscript.id, updates);
-                
+
                 setAnalysisComplete(true);
                 setIsAnalyzing(false);
 
@@ -65,7 +65,7 @@ const AddTranscript = () => {
             } catch (analysisError) {
                 console.error('Error analyzing transcript:', analysisError);
                 setIsAnalyzing(false);
-                
+
                 // Still redirect to chat even if analysis fails
                 setTimeout(() => {
                     navigate('/');
@@ -114,7 +114,7 @@ const AddTranscript = () => {
                                 <span>🧠 Analizando con IA...</span>
                                 <div className="analysis-progress">
                                     <Loader2 size={24} className="spinning" />
-                                    <p>Detectando técnicas de marketing y persuasión...</p>
+                                    <p>Extrayendo información clave...</p>
                                 </div>
                             </>
                         ) : (

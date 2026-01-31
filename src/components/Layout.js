@@ -38,8 +38,8 @@ const Layout = ({ children }) => {
           <Sparkles size={20} />
         </div>
         <div className="logo-text">
-          <h1>Marketing AI</h1>
-          <span>Base de conocimiento + Chat</span>
+          <h1>Conocimiento on Demand</h1>
+          <span>IA Conversacional + Conocimiento</span>
         </div>
       </Link>
 
