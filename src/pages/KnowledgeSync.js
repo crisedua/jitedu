@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Trash2, Database } from 'lucide-react';
 import { supabase } from '../lib/supabase-simple';
 
@@ -11,7 +11,7 @@ const KnowledgeSync = () => {
     const apiKey = process.env.REACT_APP_ELEVENLABS_API_KEY;
 
     // Helper for ElevenLabs API calls
-    const elevenLabsRequest = async (endpoint, method = 'GET', body = null) => {
+    const elevenLabsRequest = useCallback(async (endpoint, method = 'GET', body = null) => {
         const url = `https://api.elevenlabs.io/v1/${endpoint}`;
         const headers = {
             'xi-api-key': apiKey,
@@ -32,13 +32,9 @@ const KnowledgeSync = () => {
         }
 
         return response.json();
-    };
+    }, [apiKey]);
 
-    useEffect(() => {
-        fetchDocuments();
-    }, []);
-
-    const fetchDocuments = async () => {
+    const fetchDocuments = useCallback(async () => {
         try {
             setLoading(true);
             const response = await elevenLabsRequest('convai/knowledge-base/documents');
@@ -49,7 +45,11 @@ const KnowledgeSync = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [elevenLabsRequest]);
+
+    useEffect(() => {
+        fetchDocuments();
+    }, [fetchDocuments]);
 
     const handleDelete = async (docId, name) => {
         if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
