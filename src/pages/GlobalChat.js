@@ -277,128 +277,27 @@ const GlobalChat = () => {
         );
     }
 
-    // Welcome screen with input at top
+    // Voice Agent Only Mode
     return (
-        <div className="chat-welcome-view">
-            {isLoading ? (
-                <div className="welcome-loading">
-                    <Loader2 size={40} className="spinning" />
-                    <p>Cargando base de conocimiento...</p>
+        <div className="chat-welcome-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>
+            {/* Minimal centered content - mostly empty to let the Voice Widget shine */}
+            <div className="welcome-content" style={{ textAlign: 'center' }}>
+                <div style={{
+                    width: '80px',
+                    height: '80px',
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 24px auto',
+                    boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.5)'
+                }}>
+                    <div style={{ fontSize: '32px' }}>🎙️</div>
                 </div>
-            ) : !hasTranscripts ? (
-                <div className="welcome-empty">
-                    <h2>Sin transcripts aún</h2>
-                    <p>Agrega transcripts para comenzar a hacer preguntas</p>
-                    <Link to="/add" className="add-transcript-btn">
-                        <Plus size={20} />
-                        Agregar Transcript
-                    </Link>
-                </div>
-            ) : (
-                <div className="welcome-content">
-                    {/* Large Input Area */}
-                    <div className="welcome-input-container">
-                        <textarea
-                            ref={textareaRef}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder={user ? "Quiero comenzar con..." : "Inicia sesión para preguntar..."}
-                            rows={3}
-                        />
-                        <button
-                            className="welcome-send-btn"
-                            onClick={handleSendMessage}
-                            disabled={isSending || !inputValue.trim()}
-                        >
-                            <Send size={20} />
-                        </button>
-                    </div>
-
-                    {/* Pending Analysis Banner */}
-                    {pendingTranscripts.length > 0 && (
-                        <div className="pending-analysis-banner" style={{
-                            background: 'rgba(245, 158, 11, 0.1)',
-                            border: '1px solid rgba(245, 158, 11, 0.3)',
-                            borderRadius: '12px',
-                            padding: '16px',
-                            margin: '24px 0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            color: '#D97706'
-                        }}>
-                            <div className="banner-text">
-                                <strong>⚠️ Inteligencia Incompleta</strong>
-                                <p style={{ fontSize: '0.9rem', margin: '4px 0 0 0', opacity: 0.9 }}>
-                                    Hay {pendingTranscripts.length} transcripts sin analizar.
-                                    {isAnalyzingPending ? ` Procesando ${analysisProgress.current}/${analysisProgress.total}...` : ' Procesa ahora para mejorar el chat.'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleAnalyzePending}
-                                disabled={isAnalyzingPending}
-                                style={{
-                                    background: '#D97706',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '8px 16px',
-                                    borderRadius: '8px',
-                                    cursor: isAnalyzingPending ? 'wait' : 'pointer',
-                                    opacity: isAnalyzingPending ? 0.7 : 1,
-                                    fontWeight: 500
-                                }}
-                            >
-                                {isAnalyzingPending ? (<Loader2 size={16} className="spinning" />) : '⚡ Analizar Todo'}
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Quick Actions - Based on transcripts */}
-                    <div className="quick-actions">
-                        {quickSuggestions.map((action, index) => {
-                            const Icon = action.icon;
-                            return (
-                                <button
-                                    key={index}
-                                    className="quick-action-btn"
-                                    onClick={() => handleQuickAction(action.text)}
-                                >
-                                    <Icon size={18} style={{ color: action.color }} />
-                                    <span>{action.text}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div className="transcript-management" style={{ textAlign: 'center', marginTop: '20px' }}>
-                        <button
-                            onClick={() => setShowTranscriptList(!showTranscriptList)}
-                            style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.85rem' }}
-                        >
-                            {showTranscriptList ? 'Ocultar Transcripts' : 'Gestionar Transcripts'}
-                        </button>
-
-                        {showTranscriptList && (
-                            <div className="transcript-list" style={{ marginTop: '10px', maxHeight: '200px', overflowY: 'auto', textAlign: 'left', background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                {transcripts.map(t => (
-                                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #F3F4F6' }}>
-                                        <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
-                                            {t.title || 'Sin título'}
-                                        </span>
-                                        <button
-                                            onClick={(e) => handleDeleteTranscript(t.id, e)}
-                                            style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+                <h2 style={{ fontSize: '1.5rem', color: '#1F2937', marginBottom: '8px' }}>Voice Agent Active</h2>
+                <p style={{ color: '#6B7280' }}>Click the widget in the bottom right to start talking.</p>
+            </div>
         </div>
     );
 };
