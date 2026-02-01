@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Trash2, Database } from 'lucide-react';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { supabase } from '../lib/supabase-simple';
 
 const KnowledgeSync = () => {
@@ -9,12 +8,31 @@ const KnowledgeSync = () => {
     const [syncing, setSyncing] = useState(false);
     const [status, setStatus] = useState('');
     const [agentId] = useState(process.env.REACT_APP_ELEVENLABS_AGENT_ID);
+    const apiKey = process.env.REACT_APP_ELEVENLABS_API_KEY;
 
-    // Initialize client
-    // Note: explicitly using the key from env. In production, this should be proxied.
-    const elevenlabs = new ElevenLabsClient({
-        apiKey: process.env.REACT_APP_ELEVENLABS_API_KEY
-    });
+    // Helper for ElevenLabs API calls
+    const elevenLabsRequest = async (endpoint, method = 'GET', body = null) => {
+        const url = `https://api.elevenlabs.io/v1/${endpoint}`;
+        const headers = {
+            'xi-api-key': apiKey,
+            ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {})
+        };
+
+        const options = {
+            method,
+            headers,
+            body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : null
+        };
+
+        const response = await fetch(url, options);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail?.message || errorData.detail || `API Error: ${response.statusText}`);
+        }
+
+        return response.json();
+    };
 
     useEffect(() => {
         fetchDocuments();
@@ -23,7 +41,7 @@ const KnowledgeSync = () => {
     const fetchDocuments = async () => {
         try {
             setLoading(true);
-            const response = await elevenlabs.conversationalAi.knowledgeBase.documents.list();
+            const response = await elevenLabsRequest('convai/knowledge-base/documents');
             setDocuments(response.documents || []);
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -38,7 +56,7 @@ const KnowledgeSync = () => {
 
         try {
             setLoading(true);
-            await elevenlabs.conversationalAi.knowledgeBase.documents.delete(docId);
+            await elevenLabsRequest(`convai/knowledge-base/documents/${docId}`, 'DELETE');
             await fetchDocuments();
             setStatus(`Deleted "${name}"`);
         } catch (error) {
@@ -53,6 +71,10 @@ const KnowledgeSync = () => {
         try {
             setSyncing(true);
             setStatus('Starting sync...');
+
+            if (!agentId || !apiKey) {
+                throw new Error('Missing ElevenLabs configuration (Agent ID or API Key)');
+            }
 
             // 1. Fetch completed transcripts from Supabase
             const { data: transcripts, error } = await supabase
@@ -85,8 +107,9 @@ const KnowledgeSync = () => {
 
                 setStatus(`Uploading: ${docName}...`);
 
-                // Upload to ElevenLabs
-                const doc = await elevenlabs.conversationalAi.knowledgeBase.documents.createFromText({
+                // Upload to ElevenLabs via API
+                // Endpoint: POST /v1/convai/knowledge-base/documents
+                await elevenLabsRequest('convai/knowledge-base/documents', 'POST', {
                     name: docName,
                     text: content
                 });
@@ -97,7 +120,7 @@ const KnowledgeSync = () => {
             }
 
             // 3. Re-fetch documents to get new IDs
-            const updatedDocsResponse = await elevenlabs.conversationalAi.knowledgeBase.documents.list();
+            const updatedDocsResponse = await elevenLabsRequest('convai/knowledge-base/documents');
             const allDocs = updatedDocsResponse.documents || [];
 
             // 4. Attach ALL documents to the agent
@@ -106,14 +129,16 @@ const KnowledgeSync = () => {
                 const knowledgeBaseConfig = allDocs.map(d => ({
                     id: d.id,
                     name: d.name,
-                    type: 'text' // Assuming text for now
+                    type: 'text'
                 }));
 
-                await elevenlabs.conversationalAi.agents.update(agentId, {
-                    conversationConfig: {
+                // Update Agent
+                // Endpoint: PATCH /v1/convai/agents/{agent_id}
+                await elevenLabsRequest(`convai/agents/${agentId}`, 'PATCH', {
+                    conversation_config: {
                         agent: {
                             prompt: {
-                                knowledgeBase: knowledgeBaseConfig
+                                knowledge_base: knowledgeBaseConfig
                             }
                         }
                     }
