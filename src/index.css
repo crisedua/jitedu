@@ -2729,3 +2729,13 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+/* ElevenLabs Widget Centering */
+elevenlabs-convai {
+  position: fixed !important;
+  bottom: auto !important;
+  right: auto !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 9999;
+}
