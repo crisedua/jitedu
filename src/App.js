@@ -9,6 +9,8 @@ import AddTranscript from './pages/AddTranscript';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 
+import KnowledgeSync from './pages/KnowledgeSync';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -46,6 +48,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/knowledge" element={
+              <ProtectedRoute requireAdmin={true}>
+                <Layout>
+                  <KnowledgeSync />
                 </Layout>
               </ProtectedRoute>
             } />

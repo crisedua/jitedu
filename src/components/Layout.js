@@ -6,7 +6,8 @@ import {
   Settings,
   Sparkles,
   LogOut,
-  User
+  User,
+  Database
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +21,7 @@ const Layout = ({ children }) => {
   const navigation = [
     { name: 'Chat', href: '/', icon: MessageSquare, requiredAdmin: false },
     { name: 'Agregar Transcript', href: '/add', icon: Plus, requiredAdmin: true },
+    { name: 'Knowledge Base', href: '/knowledge', icon: Database, requiredAdmin: true },
     { name: 'Configuración', href: '/settings', icon: Settings, requiredAdmin: false },
   ];
 
