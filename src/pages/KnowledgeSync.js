@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Trash2, Upload, Database, ExternalLink } from 'lucide-react';
+import { RefreshCw, Trash2, Database } from 'lucide-react';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { supabase } from '../lib/supabase-simple';
 
@@ -8,12 +8,12 @@ const KnowledgeSync = () => {
     const [loading, setLoading] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [status, setStatus] = useState('');
-    const [agentId] = useState(process.env.ELEVENLABS_AGENT_ID);
+    const [agentId] = useState(process.env.REACT_APP_ELEVENLABS_AGENT_ID);
 
     // Initialize client
     // Note: explicitly using the key from env. In production, this should be proxied.
     const elevenlabs = new ElevenLabsClient({
-        apiKey: process.env.ELEVENLABS_API_KEY
+        apiKey: process.env.REACT_APP_ELEVENLABS_API_KEY
     });
 
     useEffect(() => {
@@ -101,7 +101,6 @@ const KnowledgeSync = () => {
             const allDocs = updatedDocsResponse.documents || [];
 
             // 4. Attach ALL documents to the agent
-            // This REPLACES the list, so we must include old + new
             if (addedCount > 0) {
                 setStatus('Updating agent configuration...');
                 const knowledgeBaseConfig = allDocs.map(d => ({
