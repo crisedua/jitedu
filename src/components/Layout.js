@@ -45,38 +45,42 @@ const Layout = ({ children }) => {
         </div>
       </Link>
 
-      <nav className="main-nav">
-        {filteredNav.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
-            >
-              <Icon size={18} />
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {!isChatPage && (
+        <>
+          <nav className="main-nav">
+            {filteredNav.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+                >
+                  <Icon size={18} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-      <div className="user-section">
-        <div className="user-info">
-          <div className="avatar">
-            <User size={16} />
+          <div className="user-section">
+            <div className="user-info">
+              <div className="avatar">
+                <User size={16} />
+              </div>
+              <div className="user-details">
+                <span className="user-email">{user?.email || 'Invitado'}</span>
+                <span className="user-role">{user ? (isAdmin ? 'Admin' : 'Usuario') : 'Modo Demo'}</span>
+              </div>
+            </div>
+            {user && (
+              <button onClick={logout} className="logout-btn" title="Cerrar Sessión">
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
-          <div className="user-details">
-            <span className="user-email">{user?.email || 'Invitado'}</span>
-            <span className="user-role">{user ? (isAdmin ? 'Admin' : 'Usuario') : 'Modo Demo'}</span>
-          </div>
-        </div>
-        {user && (
-          <button onClick={logout} className="logout-btn" title="Cerrar Sessión">
-            <LogOut size={16} />
-          </button>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 
