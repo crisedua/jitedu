@@ -22,6 +22,21 @@ const Login = () => {
         }
     }, [user, navigate]);
 
+    useEffect(() => {
+        // Hide voice widget on login page
+        const widget = document.querySelector('elevenlabs-convai');
+        if (widget) {
+            widget.style.display = 'none';
+        }
+
+        return () => {
+            // Restore voice widget when leaving login page
+            if (widget) {
+                widget.style.display = 'block';
+            }
+        };
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
