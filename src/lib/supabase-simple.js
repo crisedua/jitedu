@@ -99,6 +99,37 @@ export const updateTranscriptAnalysis = async (transcriptId, aiAnalysis, status 
   }
 };
 
+export const updateTranscriptFields = async (transcriptId, fields) => {
+  try {
+    if (!supabase) throw new Error('No Supabase client');
+
+    const { data, error } = await supabase
+      .from('transcripts')
+      .update(fields)
+      .eq('id', transcriptId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+
+  } catch (error) {
+    console.warn('Database update error, falling back to localStorage:', error);
+
+    // LocalStorage Fallback
+    const stored = JSON.parse(localStorage.getItem('local_transcripts') || '[]');
+    const index = stored.findIndex(t => t.id === transcriptId);
+
+    if (index !== -1) {
+      stored[index] = { ...stored[index], ...fields };
+      localStorage.setItem('local_transcripts', JSON.stringify(stored));
+      return stored[index];
+    }
+
+    throw new Error('Transcript not found in local storage');
+  }
+};
+
 export const updateTranscriptError = async (transcriptId, errorMessage) => {
   // Not critical to fallback specific error updates to localstorage, but we can try
   try {
@@ -157,11 +188,7 @@ export const getRecentTranscripts = async (limit = 20) => {
     }
   }
 
-  // Merge and sort (simple merge, might have duplicates if ID logic wasn't perfect, but UUIDs help)
-  // We prioritize local ones if we only want "offline" access, or we can just show what we found.
-  // For simplicity, let's just return the one that worked, or merge them.
-  // If DB failed, dbTranscripts is empty.
-
+  // Merge and sort
   if (dbTranscripts.length === 0) return localTranscripts.slice(0, limit);
 
   return dbTranscripts;
@@ -270,34 +297,31 @@ export const clearChatMessages = async (transcriptId) => {
   localStorage.setItem('local_chats', JSON.stringify(allChats));
 };
 
-export const updateTranscriptFields = async (transcriptId, fields) => {
+export const getSuggestedQuestions = async () => {
+  const defaultQuestions = [
+    { id: '1', question_text: '¿Cuáles son las 3 técnicas más efectivas que usa?', label: '3 Técnicas Efectivas' },
+    { id: '2', question_text: '¿Cómo puedo aplicar estas técnicas en mi negocio?', label: 'Aplicar en mi negocio' },
+    { id: '3', question_text: '¿Qué CTA usa y por qué es efectivo?', label: 'Análisis de CTA' }
+  ];
+
+  if (!supabase) return defaultQuestions;
+
   try {
-    if (!supabase) throw new Error('No Supabase client');
-
     const { data, error } = await supabase
-      .from('transcripts')
-      .update(fields)
-      .eq('id', transcriptId)
-      .select()
-      .single();
+      .from('suggested_questions')
+      .select('*')
+      .order('created_at', { ascending: true });
 
-    if (error) throw error;
-    return data;
-
-  } catch (error) {
-    console.warn('Database update error, falling back to localStorage:', error);
-
-    // LocalStorage Fallback
-    const stored = JSON.parse(localStorage.getItem('local_transcripts') || '[]');
-    const index = stored.findIndex(t => t.id === transcriptId);
-
-    if (index !== -1) {
-      stored[index] = { ...stored[index], ...fields };
-      localStorage.setItem('local_transcripts', JSON.stringify(stored));
-      return stored[index];
+    if (error) {
+      console.warn('Error fetching suggested questions:', error);
+      return defaultQuestions;
     }
 
-    throw new Error('Transcript not found in local storage');
+    return data && data.length > 0 ? data : defaultQuestions;
+
+  } catch (e) {
+    console.warn('Exception fetching suggested questions:', e);
+    return defaultQuestions;
   }
 };
 

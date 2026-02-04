@@ -55,3 +55,30 @@ DROP POLICY IF EXISTS "Allow all operations on chat_messages" ON chat_messages;
 
 CREATE POLICY "Allow all operations on transcripts" ON transcripts FOR ALL USING (true);
 CREATE POLICY "Allow all operations on chat_messages" ON chat_messages FOR ALL USING (true);
+
+-- Suggested Questions Table
+CREATE TABLE IF NOT EXISTS suggested_questions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  question_text TEXT NOT NULL,
+  label TEXT, -- Short text for button label if different from question
+  category TEXT DEFAULT 'general',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS for suggested_questions
+ALTER TABLE suggested_questions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow read access on suggested_questions" ON suggested_questions;
+CREATE POLICY "Allow read access on suggested_questions" ON suggested_questions FOR SELECT USING (true);
+-- Allow write access? Maybe for admins only, but for now allow all to simplify dev
+DROP POLICY IF EXISTS "Allow all on suggested_questions" ON suggested_questions;
+CREATE POLICY "Allow all on suggested_questions" ON suggested_questions FOR ALL USING (true);
+
+-- Create unique index to prevent duplicates
+CREATE UNIQUE INDEX IF NOT EXISTS idx_suggested_questions_text ON suggested_questions(question_text);
+
+-- Insert initial suggestions
+INSERT INTO suggested_questions (question_text, label, category) VALUES
+('¿Cuáles son las 3 técnicas más efectivas que usa?', '3 Técnicas Efectivas', 'analysis'),
+('¿Cómo puedo aplicar estas técnicas en mi negocio?', 'Aplicar en mi negocio', 'application'),
+('¿Qué CTA usa y por qué es efectivo?', 'Análisis de CTA', 'marketing')
+ON CONFLICT (question_text) DO NOTHING;

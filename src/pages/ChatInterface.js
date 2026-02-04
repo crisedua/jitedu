@@ -10,7 +10,8 @@ import {
     getChatMessages,
     saveChatMessage,
     getRecentTranscripts,
-    deleteTranscript
+    deleteTranscript,
+    getSuggestedQuestions
 } from '../lib/supabase-simple';
 
 const ChatInterface = () => {
@@ -22,6 +23,7 @@ const ChatInterface = () => {
     const [transcript, setTranscript] = useState(null);
     const [messages, setMessages] = useState([]);
     const [recentTranscripts, setRecentTranscripts] = useState([]);
+    const [suggestedQuestions, setSuggestedQuestions] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
@@ -35,15 +37,17 @@ const ChatInterface = () => {
                 setIsLoading(true);
                 setError(null);
 
-                const [transcriptData, messagesData, recentData] = await Promise.all([
+                const [transcriptData, messagesData, recentData, questionsData] = await Promise.all([
                     getTranscript(transcriptId),
                     getChatMessages(transcriptId),
-                    getRecentTranscripts(10)
+                    getRecentTranscripts(10),
+                    getSuggestedQuestions()
                 ]);
 
                 setTranscript(transcriptData);
                 setMessages(messagesData);
                 setRecentTranscripts(recentData);
+                setSuggestedQuestions(questionsData);
 
             } catch (err) {
                 console.error('Error loading data:', err);
@@ -235,15 +239,15 @@ const ChatInterface = () => {
                             <p>La IA puede ayudarte a profundizar en las técnicas detectadas,
                                 encontrar citas específicas, o analizar aspectos particulares del contenido.</p>
                             <div className="suggested-questions">
-                                <button onClick={() => setInputValue('¿Cuáles son las 3 técnicas más efectivas que usa?')}>
-                                    ¿Cuáles son las 3 técnicas más efectivas?
-                                </button>
-                                <button onClick={() => setInputValue('¿Cómo puedo aplicar estas técnicas en mi negocio?')}>
-                                    ¿Cómo aplicar estas técnicas?
-                                </button>
-                                <button onClick={() => setInputValue('¿Qué CTA usa y por qué es efectivo?')}>
-                                    ¿Qué CTAs usa y por qué funcionan?
-                                </button>
+                                {suggestedQuestions.map(q => (
+                                    <button
+                                        key={q.id}
+                                        onClick={() => setInputValue(q.question_text)}
+                                        title={q.question_text}
+                                    >
+                                        {q.label || q.question_text}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     )}
