@@ -298,30 +298,36 @@ export const clearChatMessages = async (transcriptId) => {
 };
 
 export const getSuggestedQuestions = async () => {
-  const defaultQuestions = [
-    { id: '1', question_text: '¿Cuáles son las 3 técnicas más efectivas que usa?', label: '3 Técnicas Efectivas' },
-    { id: '2', question_text: '¿Cómo puedo aplicar estas técnicas en mi negocio?', label: 'Aplicar en mi negocio' },
-    { id: '3', question_text: '¿Qué CTA usa y por qué es efectivo?', label: 'Análisis de CTA' }
+  // Default fallback if no DB connection or empty
+  const fallback = [
+    { id: '0', question_text: 'No hay documentos disponibles aún.', label: 'Sistema' }
   ];
 
-  if (!supabase) return defaultQuestions;
+  if (!supabase) return fallback;
 
   try {
+    // Fetch latest 3 transcripts to generate real questions
     const { data, error } = await supabase
-      .from('suggested_questions')
-      .select('*')
-      .order('created_at', { ascending: true });
+      .from('transcripts')
+      .select('id, title')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(3);
 
-    if (error) {
-      console.warn('Error fetching suggested questions:', error);
-      return defaultQuestions;
+    if (error || !data || data.length === 0) {
+      return fallback;
     }
 
-    return data && data.length > 0 ? data : defaultQuestions;
+    // Generate dynamic questions based on actual content
+    return data.map(doc => ({
+      id: doc.id,
+      question_text: `Resume el documento: "${doc.title || 'Sin título'}"`,
+      label: doc.title ? (doc.title.length > 20 ? doc.title.substring(0, 20) + '...' : doc.title) : 'Documento'
+    }));
 
   } catch (e) {
-    console.warn('Exception fetching suggested questions:', e);
-    return defaultQuestions;
+    console.warn('Exception fetching transcripts for suggestions:', e);
+    return fallback;
   }
 };
 
