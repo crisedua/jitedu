@@ -14,6 +14,21 @@ const AddTranscript = () => {
     const [success, setSuccess] = useState(false);
     const [analysisComplete, setAnalysisComplete] = useState(false);
 
+    useEffect(() => {
+        // Hide voice widget on Add Transcript page to prevent obstruction
+        const widget = document.querySelector('elevenlabs-convai');
+        if (widget) {
+            widget.style.display = 'none';
+        }
+
+        return () => {
+            // Restore voice widget when leaving
+            if (widget) {
+                widget.style.display = 'block';
+            }
+        };
+    }, []);
+
     const wordCount = transcript.trim().split(/\s+/).filter(w => w).length;
 
     const handleSubmit = async (e) => {
