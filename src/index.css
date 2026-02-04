@@ -2667,19 +2667,20 @@ body {
     right: 20px;
     max-width: none;
   }
-  
+
   .toast {
     transform: translateY(-100%);
   }
-  
+
   .toast-visible {
     transform: translateY(0);
   }
-  
+
   .toast-leaving {
     transform: translateY(-100%);
   }
 }
+
 /* Analysis Progress Styles */
 .analysis-progress {
   display: flex;
@@ -2726,9 +2727,15 @@ body {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
+
 /* ElevenLabs Widget Centering */
 elevenlabs-convai {
   position: fixed !important;
@@ -2769,4 +2776,92 @@ elevenlabs-convai {
   color: var(--primary-700);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
+}
+
+/* Transcription Sidebar */
+.transcription-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 350px;
+  background: white;
+  border-left: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease;
+}
+
+.transcription-header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transcription-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.transcription-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--gray-50);
+}
+
+.transcription-message {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 90%;
+}
+
+.transcription-message.user {
+  align-self: flex-end;
+  background: var(--primary-600);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.transcription-message.agent {
+  align-self: flex-start;
+  background: white;
+  color: var(--gray-800);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.transcription-message .sender-name {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+@media (max-width: 1024px) {
+  .transcription-sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .transcription-sidebar {
+    transform: translateX(100%);
+  }
+
+  .transcription-sidebar.open {
+    transform: translateX(0);
+  }
 }
