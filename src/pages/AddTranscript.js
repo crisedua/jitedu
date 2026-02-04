@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Loader2, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 import { saveTranscript, updateTranscriptFields } from '../lib/supabase-simple';
