@@ -41,6 +41,10 @@ const KnowledgeSync = () => {
             return;
         }
 
+        console.log('API Key exists:', !!apiKey);
+        console.log('API Key length:', apiKey?.length);
+        console.log('API Key first 10 chars:', apiKey?.substring(0, 10));
+
         try {
             setLoading(true);
             const response = await elevenLabsRequest('convai/knowledge-base/documents');
@@ -190,6 +194,9 @@ const KnowledgeSync = () => {
                 <p className="text-gray-600 mt-1">
                     Manage the knowledge base for your voice agent (Agent ID: {agentId || 'Not configured'})
                 </p>
+                <div className="mt-2 text-xs text-gray-500">
+                    API Key: {apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}` : 'Not configured'}
+                </div>
                 {!apiKey && (
                     <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p className="text-yellow-800 font-medium">⚠️ API Key Missing</p>
