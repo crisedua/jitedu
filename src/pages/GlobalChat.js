@@ -222,6 +222,22 @@ const GlobalChat = () => {
                     }}>
                         <span style={{ fontSize: '1.2rem' }}>+</span> Agregar Contenido
                     </a>
+                    <a href="/knowledge-base" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        background: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        color: '#4B5563',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    }}>
+                        <span>📚</span> Base de Conocimiento
+                    </a>
                     <a href="/knowledge" style={{
                         display: 'flex',
                         alignItems: 'center',

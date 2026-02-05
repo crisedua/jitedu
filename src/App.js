@@ -9,7 +9,7 @@ import AddTranscript from './pages/AddTranscript';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import ExpertsAdmin from './pages/ExpertsAdmin';
-
+import KnowledgeBase from './pages/KnowledgeBase';
 import KnowledgeSync from './pages/KnowledgeSync';
 
 const queryClient = new QueryClient({
@@ -65,6 +65,14 @@ function App() {
               <ProtectedRoute requireAdmin={true}>
                 <Layout>
                   <KnowledgeSync />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/knowledge-base" element={
+              <ProtectedRoute requireAdmin={true}>
+                <Layout>
+                  <KnowledgeBase />
                 </Layout>
               </ProtectedRoute>
             } />

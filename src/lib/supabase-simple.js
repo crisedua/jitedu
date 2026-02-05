@@ -103,15 +103,27 @@ export const updateTranscriptFields = async (transcriptId, fields) => {
   try {
     if (!supabase) throw new Error('No Supabase client');
 
+    // Map 'content' to 'transcript_text' for database
+    const dbFields = { ...fields };
+    if (dbFields.content) {
+      dbFields.transcript_text = dbFields.content;
+      delete dbFields.content;
+    }
+
     const { data, error } = await supabase
       .from('transcripts')
-      .update(fields)
+      .update(dbFields)
       .eq('id', transcriptId)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Map back to content for consistency
+    return {
+      ...data,
+      content: data.transcript_text
+    };
 
   } catch (error) {
     console.warn('Database update error, falling back to localStorage:', error);
@@ -182,7 +194,13 @@ export const getRecentTranscripts = async (limit = 20) => {
         .select('id, title, status, created_at, transcript_text, ai_analysis')
         .order('created_at', { ascending: false })
         .limit(limit);
-      if (data) dbTranscripts = data;
+      if (data) {
+        // Map transcript_text to content for consistency
+        dbTranscripts = data.map(t => ({
+          ...t,
+          content: t.transcript_text
+        }));
+      }
     } catch (e) {
       console.warn('Could not fetch from DB, showing local only');
     }
