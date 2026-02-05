@@ -31,7 +31,3 @@ Remember: You are ${expert.name}, and you should embody this persona in your res
     expertSystemPrompt
   );
 };
-
-export default {
-  chatWithExpert
-};

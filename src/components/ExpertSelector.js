@@ -10,7 +10,7 @@ const ExpertSelector = ({ onExpertChange, userId = 'default-user' }) => {
 
   useEffect(() => {
     loadExperts();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadExperts = async () => {
     try {

@@ -227,13 +227,3 @@ const getDefaultExperts = () => [
     sort_order: 5
   }
 ];
-
-export default {
-  getExperts,
-  getExpertBySlug,
-  getExpertTranscripts,
-  saveSelectedExpert,
-  getSelectedExpert,
-  linkTranscriptToExpert,
-  autoAssignTranscriptToExperts
-};
