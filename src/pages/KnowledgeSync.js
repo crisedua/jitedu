@@ -35,17 +35,24 @@ const KnowledgeSync = () => {
     }, [apiKey]);
 
     const fetchDocuments = useCallback(async () => {
+        if (!apiKey) {
+            setStatus('Error: REACT_APP_ELEVENLABS_API_KEY not configured');
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await elevenLabsRequest('convai/knowledge-base/documents');
             setDocuments(response.documents || []);
+            setStatus('');
         } catch (error) {
             console.error('Error fetching documents:', error);
             setStatus(`Error loading documents: ${error.message}`);
         } finally {
             setLoading(false);
         }
-    }, [elevenLabsRequest]);
+    }, [elevenLabsRequest, apiKey]);
 
     useEffect(() => {
         fetchDocuments();
@@ -181,8 +188,16 @@ const KnowledgeSync = () => {
                     ElevenLabs Knowledge Base
                 </h1>
                 <p className="text-gray-600 mt-1">
-                    Manage the knowledge base for your voice agent (Agent ID: {agentId})
+                    Manage the knowledge base for your voice agent (Agent ID: {agentId || 'Not configured'})
                 </p>
+                {!apiKey && (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-yellow-800 font-medium">⚠️ API Key Missing</p>
+                        <p className="text-yellow-700 text-sm mt-1">
+                            Please add <code className="bg-yellow-100 px-1 rounded">REACT_APP_ELEVENLABS_API_KEY</code> to your environment variables.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Sync Actions */}
