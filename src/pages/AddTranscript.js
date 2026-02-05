@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Send, Loader2, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 import { saveTranscript, updateTranscriptFields } from '../lib/supabase-simple';
 import { analyzeTranscriptWithAI } from '../lib/openrouter';
+import { autoAssignTranscriptToExperts } from '../lib/experts';
 
 const AddTranscript = () => {
     const navigate = useNavigate();
@@ -68,6 +69,9 @@ const AddTranscript = () => {
                 }
 
                 await updateTranscriptFields(savedTranscript.id, updates);
+
+                // Step 4: Auto-assign to relevant experts
+                await autoAssignTranscriptToExperts(savedTranscript.id, transcript, analysis);
 
                 setAnalysisComplete(true);
                 setIsAnalyzing(false);

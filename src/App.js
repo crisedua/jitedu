@@ -8,6 +8,7 @@ import GlobalChat from './pages/GlobalChat';
 import AddTranscript from './pages/AddTranscript';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import ExpertsAdmin from './pages/ExpertsAdmin';
 
 import KnowledgeSync from './pages/KnowledgeSync';
 
@@ -48,6 +49,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/experts" element={
+              <ProtectedRoute requireAdmin={true}>
+                <Layout>
+                  <ExpertsAdmin />
                 </Layout>
               </ProtectedRoute>
             } />

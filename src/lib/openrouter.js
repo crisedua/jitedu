@@ -419,7 +419,7 @@ Si la pregunta no está en el contenido, usa tu criterio experto para dar un con
 };
 
 // Chat with ALL transcripts - global knowledge base search
-export const chatWithAllTranscripts = async (transcripts, chatHistory, question) => {
+export const chatWithAllTranscripts = async (transcripts, chatHistory, question, customSystemPrompt = null) => {
   if (!OPENAI_API_KEY) {
     throw new Error('La clave API de OpenAI es necesaria para el chat');
   }
@@ -438,7 +438,7 @@ ${analysis}
 --- FIN TRANSCRIPT ${index + 1} ---`;
   }).join('\n\n');
 
-  const systemPrompt = `Eres un Consultor Estratégico y "Training Partner" de alto nivel.
+  const defaultSystemPrompt = `Eres un Consultor Estratégico y "Training Partner" de alto nivel.
 Tienes acceso a una BASE DE CONOCIMIENTO CENTRALIZADA (Tu cerebro) con ${transcripts.length} documentos clave.
 
 TU MISIÓN:
@@ -456,6 +456,8 @@ PRINCIPIOS DE INTERACCIÓN:
 6. **Preguntas de Coaching**: De vez en cuando, termina con una pregunta que invite a la reflexión estratégica (ej: "¿Cuál de estas estrategias crees que tendría más impacto en tu proyecto actual?").
 
 Tu objetivo final es que el usuario sea más inteligente y capaz después de hablar contigo.`;
+
+  const systemPrompt = customSystemPrompt || defaultSystemPrompt;
 
   const messages = [
     { role: 'system', content: systemPrompt },
