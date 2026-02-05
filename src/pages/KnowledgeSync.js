@@ -7,8 +7,8 @@ const KnowledgeSync = () => {
     const [loading, setLoading] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [status, setStatus] = useState('');
-    const [agentId] = useState(process.env.REACT_APP_ELEVENLABS_AGENT_ID);
-    const apiKey = process.env.REACT_APP_ELEVENLABS_API_KEY;
+    const [agentId] = useState(process.env.REACT_APP_ELEVENLABS_AGENT_ID || process.env.ACT_APP_ELEVENLABS_AGENT_ID);
+    const apiKey = process.env.REACT_APP_ELEVENLABS_API_KEY || process.env.ACT_APP_ELEVENLABS_API_KEY;
 
     // Helper for ElevenLabs API calls
     const elevenLabsRequest = useCallback(async (endpoint, method = 'GET', body = null) => {

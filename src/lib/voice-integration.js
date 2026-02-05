@@ -1,7 +1,7 @@
 // ElevenLabs Voice Integration for Experts
 // This module handles voice synthesis for each expert using their assigned voice_id
 
-const ELEVENLABS_API_KEY = process.env.REACT_APP_ELEVENLABS_API_KEY;
+const ELEVENLABS_API_KEY = process.env.REACT_APP_ELEVENLABS_API_KEY || process.env.ACT_APP_ELEVENLABS_API_KEY;
 
 export const speakWithExpertVoice = async (text, expert) => {
   if (!ELEVENLABS_API_KEY) {
