@@ -117,17 +117,45 @@ export const initializeElevenLabsWidget = (expert) => {
 
 // Configure widget with expert's voice and personality
 export const configureWidgetForExpert = (expert) => {
+  // Build enhanced system prompt that restricts responses to expert's domain
+  const enhancedPrompt = `${expert.system_prompt}
+
+CRITICAL INSTRUCTIONS:
+- You MUST stay in character as ${expert.name} at all times
+- Your specialty is ONLY: ${expert.specialty}
+- If asked about topics outside ${expert.specialty}, politely redirect: "That's outside my area of expertise in ${expert.specialty}. Let me help you with [related topic in your domain] instead."
+- Always provide specific, actionable advice related to ${expert.specialty}
+- Reference your experience and knowledge in ${expert.specialty}
+- Never break character or discuss topics unrelated to ${expert.specialty}
+
+Remember: You are ${expert.name}, ${expert.title}, specializing exclusively in ${expert.specialty}.`;
+
   const widgetConfig = {
-    agentId: expert.voice_id,
+    agentId: expert.voice_id || 'default',
     overrides: {
       agent: {
-        firstMessage: `Hola, soy ${expert.name}, ${expert.title}. ¿En qué puedo ayudarte hoy?`,
-        prompt: expert.system_prompt
+        firstMessage: `Hola, soy ${expert.name}, ${expert.title}. Mi especialidad es ${expert.specialty}. ¿En qué puedo ayudarte hoy?`,
+        prompt: enhancedPrompt
       }
     }
   };
 
   // Apply configuration to widget if it exists
+  const widget = document.querySelector('elevenlabs-convai');
+  if (widget) {
+    // Update widget attributes
+    if (expert.voice_id) {
+      widget.setAttribute('agent-id', expert.voice_id);
+    }
+    
+    // Store expert context in widget data attribute for reference
+    widget.setAttribute('data-expert-slug', expert.slug);
+    widget.setAttribute('data-expert-name', expert.name);
+    
+    console.log(`Widget configured for ${expert.name} (${expert.specialty})`);
+  }
+
+  // Apply configuration via API if available
   if (window.ElevenLabsConvAI) {
     window.ElevenLabsConvAI.configure(widgetConfig);
   }
@@ -135,10 +163,12 @@ export const configureWidgetForExpert = (expert) => {
   return widgetConfig;
 };
 
-export default {
+const voiceIntegration = {
   speakWithExpertVoice,
   playAudioResponse,
   getRecommendedVoice,
   initializeElevenLabsWidget,
   configureWidgetForExpert
 };
+
+export default voiceIntegration;

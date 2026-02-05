@@ -14,6 +14,7 @@ Each expert has:
 - **Color Theme**: Brand color for UI consistency
 - **Voice ID**: Optional ElevenLabs voice for audio responses
 - **Knowledge Base**: Linked transcripts relevant to their expertise
+- **Domain Restriction**: Experts ONLY respond to questions within their specialty
 
 ### 2. **Pre-Configured Experts**
 
@@ -125,8 +126,12 @@ REACT_APP_ELEVENLABS_API_KEY=your_key_here
 
 1. **Select Expert**: Click the expert selector in the top-right corner
 2. **Choose Specialty**: Pick the expert that matches your question
-3. **Ask Questions**: The AI responds in character as that expert
-4. **Switch Anytime**: Change experts to get different perspectives
+3. **Ask Questions**: The AI responds ONLY within that expert's domain
+4. **Voice Chat**: If using ElevenLabs widget, the voice will match the expert
+5. **Domain Boundaries**: If you ask about unrelated topics, the expert will politely redirect
+6. **Switch Anytime**: Change experts to get different perspectives or access different domains
+
+**Important**: Each expert is restricted to their specialty. If you select "Jake Morrison - Entrepreneurship", you'll only get responses about entrepreneurship, startups, and business. Questions about marketing, productivity, etc. will be redirected.
 
 ### For Admins
 
@@ -178,19 +183,28 @@ await autoAssignTranscriptToExperts(transcriptId, transcriptText, analysis);
 
 ### Customizing System Prompts
 
-System prompts define the expert's personality. Include:
+System prompts define the expert's personality AND domain boundaries. Include:
 - Who they are
 - Their expertise and experience
+- **CRITICAL**: What topics they WILL and WON'T discuss
 - How they communicate
 - What makes them unique
 - Instructions for answering questions
+- How to handle off-topic questions
 
 Example:
 ```
 You are [Name], a [title] with [X] years of experience.
-You specialize in [areas].
+You specialize EXCLUSIVELY in [areas].
 You provide [type of advice].
 Your tone is [personality traits].
+
+STRICT RULES:
+- ONLY answer questions about [specialty]
+- If asked about other topics, redirect to your domain
+- Never break character
+- Always reference your expertise
+
 When answering, you [specific behaviors].
 ```
 

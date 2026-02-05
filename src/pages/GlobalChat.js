@@ -3,6 +3,7 @@ import { getSuggestedQuestions } from '../lib/supabase-simple';
 import ExpertSelector from '../components/ExpertSelector';
 import { chatWithExpert } from '../lib/expert-chat';
 import { getRecentTranscripts } from '../lib/supabase-simple';
+import { configureWidgetForExpert } from '../lib/voice-integration';
 import { Send, Loader2 } from 'lucide-react';
 
 const GlobalChat = () => {
@@ -33,16 +34,57 @@ const GlobalChat = () => {
         loadTranscripts();
 
         // Listen for transcription messages from the ElevenLabs widget
-        const handleMessage = (event) => {
+        const handleMessage = async (event) => {
             console.log('ElevenLabs message received:', event.detail);
             const { source, message } = event.detail;
 
-            if (message && source) {
+            if (message && source === 'user') {
+                // User spoke via voice - add to messages
+                const userMessage = {
+                    id: Date.now() + Math.random(),
+                    text: message,
+                    sender: 'user',
+                    timestamp: new Date(),
+                    isVoice: true
+                };
+                setMessages(prev => [...prev, userMessage]);
+
+                // Process through selected expert if available
+                if (selectedExpert) {
+                    setIsSending(true);
+                    try {
+                        const currentTranscripts = transcripts;
+                        const currentMessages = messages;
+                        
+                        const response = await chatWithExpert(
+                            selectedExpert,
+                            currentTranscripts,
+                            currentMessages.map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
+                            message
+                        );
+                        
+                        const aiMessage = {
+                            id: Date.now() + Math.random() + 1,
+                            text: response,
+                            sender: 'agent',
+                            timestamp: new Date(),
+                            isVoice: true
+                        };
+                        setMessages(prev => [...prev, aiMessage]);
+                    } catch (err) {
+                        console.error('Error processing voice message:', err);
+                    } finally {
+                        setIsSending(false);
+                    }
+                }
+            } else if (message && source === 'agent') {
+                // Agent response via voice - just display it
                 setMessages(prev => [...prev, {
                     id: Date.now() + Math.random(),
                     text: message,
-                    sender: source === 'user' ? 'user' : 'agent',
-                    timestamp: new Date()
+                    sender: 'agent',
+                    timestamp: new Date(),
+                    isVoice: true
                 }]);
             }
         };
@@ -52,7 +94,7 @@ const GlobalChat = () => {
         return () => {
             window.removeEventListener('elevenlabs-convai:message', handleMessage);
         };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         scrollToBottom();
@@ -61,6 +103,15 @@ const GlobalChat = () => {
     const handleExpertChange = (expert) => {
         setSelectedExpert(expert);
         console.log('Expert selected:', expert);
+        
+        // Configure ElevenLabs widget with expert's voice and personality
+        configureWidgetForExpert(expert);
+        
+        // Update widget attributes if it exists
+        const widget = document.querySelector('elevenlabs-convai');
+        if (widget && expert.voice_id) {
+            widget.setAttribute('agent-id', expert.voice_id);
+        }
     };
 
     const handleSendMessage = async (e) => {
