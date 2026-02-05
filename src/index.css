@@ -3070,7 +3070,6 @@ elevenlabs-convai {
 
 /* Knowledge Base Page Styles */
 .knowledge-base-page {
-  min-height: 100vh;
   background: #F9FAFB;
   padding: 20px;
 }
@@ -3422,5 +3421,103 @@ elevenlabs-convai {
 
   .kb-item-actions {
     align-self: flex-end;
+  }
+}
+
+
+/* Top Navigation Menu */
+.top-nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: white;
+  border-bottom: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  z-index: 100;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FF6B35;
+  letter-spacing: -0.5px;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #6B7280;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: #F9FAFB;
+  color: #111827;
+}
+
+.nav-link.active {
+  background: #FFF4ED;
+  color: #FF6B35;
+  font-weight: 600;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Adjust chat container for nav */
+.chat-welcome-view {
+  flex: 1 !important;
+  height: calc(100vh - 60px) !important;
+}
+
+@media (max-width: 768px) {
+  .top-nav-menu {
+    flex-wrap: wrap;
+    padding: 8px 16px;
+  }
+
+  .nav-center {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+  }
+
+  .nav-brand {
+    font-size: 1.125rem;
   }
 }

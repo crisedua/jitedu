@@ -103,7 +103,32 @@ const AddTranscript = () => {
     };
 
     return (
-        <div className="add-transcript-page">
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            {/* Top Navigation Menu */}
+            <nav className="top-nav-menu">
+                <div className="nav-left">
+                    <div className="nav-logo">
+                        <span style={{ fontSize: '1.5rem' }}>🚀</span>
+                        <span className="nav-brand">DESPEGUE</span>
+                    </div>
+                </div>
+                <div className="nav-center">
+                    <a href="/" className="nav-link">
+                        💬 Chat
+                    </a>
+                    <a href="/knowledge-base" className="nav-link">
+                        📚 Base de Conocimiento
+                    </a>
+                    <a href="/add" className="nav-link active">
+                        ➕ Agregar Contenido
+                    </a>
+                </div>
+                <div className="nav-right">
+                    {/* Could add user menu or settings here */}
+                </div>
+            </nav>
+
+            <div className="add-transcript-page" style={{ flex: 1, overflow: 'auto' }}>
             <div className="add-transcript-container">
                 <div className="add-header">
                     <button onClick={() => navigate('/')} className="back-button">
@@ -204,6 +229,7 @@ const AddTranscript = () => {
                     </form>
                 )}
             </div>
+        </div>
         </div>
     );
 };

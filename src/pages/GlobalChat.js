@@ -174,7 +174,31 @@ const GlobalChat = () => {
     };
 
     return (
-        <div className="chat-container-layout" style={{ display: 'flex', height: '100vh', width: '100%' }}>
+        <div className="chat-container-layout" style={{ display: 'flex', height: '100vh', width: '100%', flexDirection: 'column' }}>
+            {/* Top Navigation Menu */}
+            <nav className="top-nav-menu">
+                <div className="nav-left">
+                    <div className="nav-logo">
+                        <span style={{ fontSize: '1.5rem' }}>🚀</span>
+                        <span className="nav-brand">DESPEGUE</span>
+                    </div>
+                </div>
+                <div className="nav-center">
+                    <a href="/" className="nav-link active">
+                        💬 Chat
+                    </a>
+                    <a href="/knowledge-base" className="nav-link">
+                        📚 Base de Conocimiento
+                    </a>
+                    <a href="/add" className="nav-link">
+                        ➕ Agregar Contenido
+                    </a>
+                </div>
+                <div className="nav-right">
+                    <ExpertSelector onExpertChange={handleExpertChange} />
+                </div>
+            </nav>
+
             <div className="chat-welcome-view" style={{
                 flex: 1,
                 display: 'flex',
@@ -183,79 +207,9 @@ const GlobalChat = () => {
                 alignItems: 'center',
                 height: '100%',
                 background: 'radial-gradient(circle at center, #F9FAFB 0%, #F3F4F6 100%)',
-                position: 'relative'
+                position: 'relative',
+                marginTop: '0'
             }}>
-                {/* Admin Links */}
-                <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    display: 'flex',
-                    gap: '10px',
-                    zIndex: 20
-                }}>
-                    {/* Expert Selector */}
-                    <ExpertSelector onExpertChange={handleExpertChange} />
-                    
-                    <a href="/add" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '10px 16px',
-                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: 'white',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
-                    }}>
-                        <span style={{ fontSize: '1.2rem' }}>+</span> Agregar Contenido
-                    </a>
-                    <a href="/knowledge-base" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 12px',
-                        background: 'white',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: '#4B5563',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                    }}>
-                        <span>📚</span> Base de Conocimiento
-                    </a>
-                    <a href="/knowledge" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 12px',
-                        background: 'white',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        color: '#4B5563',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                    }}>
-                        <span>⚡</span> Sync Knowledge
-                    </a>
-                </div>
-
                 <div style={{
                     position: 'absolute',
                     bottom: '100px',
